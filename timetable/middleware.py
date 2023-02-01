@@ -493,7 +493,7 @@ def pop(bot: TeleBot, message, daemon: Daemon):
         ring_h = int(ring_time[0])
         ring_m = int(ring_time[1])
         
-    if ring_h < 23 or ring_h < 0 or ring_m > 60 or ring_m < 0:
+    if ring_h > 23 or ring_h < 0 or ring_m > 60 or ring_m < 0:
         return "❌ Неверное время" 
 
     res = timetable.removing.remove(datetime(year, month, day, ring_h, ring_m))
