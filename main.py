@@ -272,6 +272,33 @@ def add_receiver(message):
         bot.reply_to(message, replies.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
+@bot.message_handler(commands=["push"])
+def push(message):
+    if (admins.validator.check(message)):
+        if ' ' not in message.text:
+            bot.reply_to(message, replies.push_incorrect_format)
+        else:
+            result = timetable.middleware.push(bot, message, daemon)
+            bot.reply_to(message, result)
+            logging.info(f'@{str(message.from_user.username).lower()} added new ring ({message.text})')
+    else:
+        bot.reply_to(message, replies.access_denied)    
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.message_handler(commands=["pop"])
+def push(message):
+    if (admins.validator.check(message)):
+        if ' ' not in message.text:
+            bot.reply_to(message, replies.pop_incorrect_format)
+        else:
+            result = timetable.middleware.pop(bot, message, daemon)
+            bot.reply_to(message, result)
+            logging.info(f'@{str(message.from_user.username).lower()} removed new ring ({message.text})' if not result else '@{str(message.from_user.username).lower()} failed to remove new ring ({message.text}): no such')
+    else:
+        bot.reply_to(message, replies.access_denied)    
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+
 print(f"Works.")
 daemon.start()
 

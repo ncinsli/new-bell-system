@@ -104,10 +104,11 @@ class Daemon(threading.Thread):
                     try: displaying.LCD_2004.no_more_rings()
                     except: print("[GPIO] .no_more_rings")
 
+                    logging.getLogger().warn(f'No more rings')
+                   
                     for id in configuration.debug_info_receivers:
                         self.debugger.send_message(id, '⏰ Сегодня больше нет звонков')
                     
-                    logging.getLogger().warn(f'No more rings')
 
                 if self.order + 1 <= len(self.today_timetable) - 1:
                     if self.today_timetable[self.order+1] == self.today_timetable[self.order]:
@@ -133,7 +134,6 @@ class Daemon(threading.Thread):
 
                     self.last_called_timing = timing
                 else:
-                    print(f'No prering (muted ring at {timing})')
                     logging.getLogger().warn(f'No pre-ring (muted)')
                     self.last_called_timing = timing
 
@@ -147,7 +147,7 @@ class Daemon(threading.Thread):
         time.sleep(duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration)
         ring_callbacks.stop_ring()
 
-        logging.getLogger().warn(f'Stopped pre-ring')
+        logging.getLogger().warn(f'Stopped ring')
 
         for id in configuration.debug_info_receivers:
             self.debugger.send_message(id, '🛎️  Ручной звонок успешно подан')

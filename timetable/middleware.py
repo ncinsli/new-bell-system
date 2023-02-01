@@ -15,6 +15,8 @@ from telebot import types
 import timetable.utils as utils
 import timetable.muting
 import timetable.getting
+import timetable.adding
+import timetable.removing
 import timetable.setting
 import timetable.overrides
 import timetable.timetable_defaultvalues as setup
@@ -430,3 +432,61 @@ def events_duration(bot: TeleBot, affected_events: EventType, message, daemon: D
 
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
+
+def push(bot: TeleBot, message, daemon: Daemon):
+    args = message.text.split()[1:]
+
+    if '.' in message.text:
+        day = int(args[0].split('.')[0])
+        month = int(args[0].split('.')[1])
+        year = int(args[0].split('.')[2])
+
+        ring_time = args[1].split(':')
+        
+        ring_h = int(ring_time[0])
+        ring_m = int(ring_time[1])
+
+    else:
+        day = datetime.now().day
+        month = datetime.now().month
+        year = datetime.now().year
+        
+        ring_time = args[0].split(':')
+        
+        ring_h = int(ring_time[0])
+        ring_m = int(ring_time[1])
+
+    if ring_h < 23 or ring_h < 0 or ring_m > 60 or ring_m < 0:
+        return "❌ Неверное время" 
+
+    res = timetable.adding.add(datetime(year, month, day, ring_h, ring_m))
+    return "✅ Звонок добавлен" if not res else "❌ Такой звонок уже есть"
+
+def pop(bot: TeleBot, message, daemon: Daemon):
+    args = message.text.split()[1:]
+
+    if '.' in message.text:
+        day = int(args[0].split('.')[0])
+        month = int(args[0].split('.')[1])
+        year = int(args[0].split('.')[2])
+
+        ring_time = args[1].split(':')
+        
+        ring_h = int(ring_time[0])
+        ring_m = int(ring_time[1])
+
+    else:
+        day = datetime.now().day
+        month = datetime.now().month
+        year = datetime.now().year
+        
+        ring_time = args[0].split(':')
+        
+        ring_h = int(ring_time[0])
+        ring_m = int(ring_time[1])
+        
+    if ring_h < 23 or ring_h < 0 or ring_m > 60 or ring_m < 0:
+        return "❌ Неверное время" 
+
+    res = timetable.removing.remove(datetime(year, month, day, ring_h, ring_m))
+    return "✅ Звонок удалён" if not res else "❌ Такого звонка не было"

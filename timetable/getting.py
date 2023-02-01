@@ -17,6 +17,7 @@ def get_time(date: datetime):
         WHERE day={date.day} 
               AND month={date.month}
               AND year={date.year}
+        ORDER BY time
     """)
 
     content = cursor.fetchall()
@@ -29,6 +30,7 @@ def get_time(date: datetime):
             SELECT time, muted 
             FROM {table}
             WHERE {columnName}=1
+            ORDER BY time
         """)
 
         content = cursor.fetchall()
