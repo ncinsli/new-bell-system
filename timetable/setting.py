@@ -37,7 +37,7 @@ def set_time(items):
                         if len(values2) != 8:
                             for i in range(8-len(values2)):
                                 values2.append(0)
-                        print(values2)
+                        #print(values2)
                         cursor.execute(f"""
                             INSERT INTO {table}(time, OnMonday, OnTuesday, OnWednesday, OnThursday, OnFriday, OnSaturday, OnSunday) Values(?, ?, ?, ?, ?, ?, ?, ?)""", values2)
                         connection.commit()

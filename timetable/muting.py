@@ -135,7 +135,7 @@ def unmute_all(date: datetime):
     AND year={date.year}
     """)
     overrides = cursor.fetchall()
-    print(overrides)
+    # print(overrides)
     connection.commit()
     if len(overrides) == 0:
         # Значит этот день не был особенным, поэтому его надо таковым сделать

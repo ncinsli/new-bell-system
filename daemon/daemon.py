@@ -149,5 +149,3 @@ class Daemon(threading.Thread):
 
         logging.getLogger().warn(f'Stopped ring')
 
-        for id in configuration.debug_info_receivers:
-            self.debugger.send_message(id, '🛎️  Ручной звонок успешно подан')

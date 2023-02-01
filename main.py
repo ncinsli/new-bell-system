@@ -29,7 +29,7 @@ log_filename = os.path.join('logs', f'{datetime.now().strftime("%a %d %b %Y %H;%
 
 logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler(log_filename), logging.StreamHandler(sys.stdout)], format='[%(asctime)s] [%(levelname)s] %(message)s')
 
-token = os.environ["BELLER_TOKEN"]
+token = os.environ["TOKEN"]
 bot = TeleBot(token)
 
 connection = configuration.connection
@@ -46,7 +46,7 @@ daemon.debugger = bot
 
 @bot.message_handler(commands=["exec"])
 def exec(message):
-    if (admins.validator.check(message)):
+    if message.from_user.username in configuration.owners:
         try:
             result = subprocess.check_output(message.text[5:].split())
         
@@ -109,7 +109,16 @@ def ring(message):
         try:
             if message.text != '/ring': duration = float(message.text.split()[1])
         except: bot.reply_to(message, 'Неверный аргумент')
+        
         daemon.instant_ring(duration)
+        
+        try:
+            duration = '' if duration == configuration.ring_duration else (" длиной в " + str(duration) + " секунд")
+            for id in configuration.debug_info_receivers:
+                daemon.debugger.send_message(id, f'🛎️  Ручной звонок{duration} подан пользователем @{str(message.from_user.username).lower()}')
+
+        except: logging.getLogger().error('Unable to send message about manual ring')
+
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.access_denied)
@@ -298,8 +307,15 @@ def push(message):
         bot.reply_to(message, replies.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
+@bot.message_handler(commands=["get_timetable_json"])
+def get_timetable_json(message):
+    timetable_file = open('timetable.json')
+    bot.send_message(message.chat.id, '```' + ' ' + timetable_file.read() + '```', parse_mode='MarkdownV2')
+    timetable_file.close()
+    logging.info(f'@{str(message.from_user.username).lower()} requested timetable in json')
 
-print(f"Works.")
+
+print(f"[MAIN] Let's go!")
 daemon.start()
 
 try:

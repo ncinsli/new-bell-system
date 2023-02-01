@@ -52,8 +52,8 @@ def resize(date: datetime, event: EventType, order: int, seconds: int): # -> Use
                 """)
             connection.commit()
 
-        print('New timetable', new_timetable)
-        print('Muted', muted)
+        # print('New timetable', new_timetable)
+        # print('Muted', muted)
         for i in range(len(new_timetable)):
             cursor.execute(f"""
                     INSERT INTO {table_override}(year, month, day, time, muted) VALUES(?, ?, ?, ?, ?) 
@@ -88,7 +88,7 @@ def resize_events(date: datetime, event: EventType, seconds: int):
         result = timetable.utils.sum_times(default_timetable[i], delta[i] * 60) if seconds >= 0 else timetable.utils.sub_times(default_timetable[i], abs(delta[i]) * 60)
         new_timetable.append(result)
 
-    print(new_timetable, len(new_timetable))
+    #print(new_timetable, len(new_timetable))
     try:
         dmy = f'{date.year}.{str(date.month).zfill(2)}.{str(date.day).zfill(2)}'
         columnName = 'On' + calendar.day_name[date.weekday()].capitalize()
@@ -121,8 +121,8 @@ def resize_events(date: datetime, event: EventType, seconds: int):
                 """)
             connection.commit()
 
-        print('New timetable', new_timetable)
-        print('Muted', muted)
+        #print('New timetable', new_timetable)
+        #print('Muted', muted)
         for i in range(len(new_timetable)):
             cursor.execute(f"""
                     INSERT INTO {table_override}(year, month, day, time, muted) VALUES(?, ?, ?, ?, ?) 

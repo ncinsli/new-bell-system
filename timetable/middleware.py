@@ -92,7 +92,7 @@ def get_time_edited(bot: TeleBot, call):
 def get_time_raw(date: datetime):
     list_db, muted = timetable.getting.get_time(date)
     combined = []
-    print(list_db, muted)
+    # print(list_db, muted)
     for i in range(0, len(list_db) - 1):
         if i % 2 == 0:
             to_append = ('🔇' if muted[i] else '') + '<b>• ' + list_db[i] + ' — ' + list_db[i + 1] + '</b>' + ('🔇' if muted[i + 1] else '')
@@ -137,6 +137,7 @@ def set_time(bot: TeleBot, message, daemon: Daemon):
 
 
     content = bot.download_file(file_id_info.file_path).decode('utf-8')
+
     #print(content) # Текст файла
     # TODO: Загрузка json -> изменение дефолтной БД (+ скопировать старую, наверное)
 
@@ -158,6 +159,9 @@ def set_time(bot: TeleBot, message, daemon: Daemon):
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
     
+    with open('timetable.json', 'w') as file:
+        file.write(content)
+        
     return returned
 
 
@@ -211,7 +215,6 @@ def shift_table_handler(table):
     timetable.setting.set_time(dict(pre_db_items))
 
     return "✅ Расписание успешно перезаписано"
-
 
 def absolute_table_handler(table):
     bells = ['08:30', '08:50', '09:00', '09:15', '09:35', '09:45', '09:25', '09:55', '10:10', '10:30', '10:40', '10:20', '10:50', '11:05', '11:35', '11:25', '11:45', '11:55', '12:10', '12:40', '12:30', '12:50', '13:00', '13:15', '13:35', '13:45', '13:25', '13:55', '14:10', '14:30', '14:40', '14:15', '14:50', '15:00', '15:25', '15:35']
@@ -299,9 +302,9 @@ def shift(bot: TeleBot, message, daemon: Daemon):
     if postfix == 'h': in_seconds = measured_value * 3600
 
     timetable.shifting.shift(datetime(year, month, day), in_seconds // 60)
-    print("Shifted!")
-    bot.reply_to(message, f'Расписание на {utils.get_weekday_russian(datetime(year, month, day))}, {day} {month}, {year} сдвинуто на {in_seconds // 60} мин')
-    print("Shifted after reply")
+
+    bot.reply_to(message, f'Расписание на {utils.get_weekday_russian(datetime(year, month, day))}, {str(day).zfill(2)} {str(month).zfill(2)}, {year} сдвинуто на {in_seconds // 60} мин')
+
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
 
@@ -326,7 +329,7 @@ def mute(bot: TeleBot, message, daemon: Daemon):
 
     # Сериализация
     timetable.muting.mute(datetime(year, month, day, hour, minutes))
-    bot.reply_to(message, f'Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {day}.{month}.{year} не будет включён')
+    bot.reply_to(message, f'Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {str(day).zfill(2)}.{str(month).zfill(2)}.{year} не будет включён')
 
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
@@ -346,7 +349,7 @@ def mute_all(bot: TeleBot, message, daemon: Daemon):
 
     # Сериализация
     timetable.muting.mute_all(datetime(year, month, day))
-    bot.reply_to(message, f'Все звонки {day}.{month}.{year} будут заглушены')
+    bot.reply_to(message, f'Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут заглушены')
 
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
@@ -390,7 +393,7 @@ def unmute_all(bot: TeleBot, message, daemon: Daemon):
 
     # Сериализация
     timetable.muting.unmute_all(datetime(year, month, day))
-    bot.reply_to(message, f'Все звонки {day}.{month}.{year} будут включены')
+    bot.reply_to(message, f'Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут включены')
 
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
@@ -456,10 +459,15 @@ def push(bot: TeleBot, message, daemon: Daemon):
         ring_h = int(ring_time[0])
         ring_m = int(ring_time[1])
 
-    if ring_h < 23 or ring_h < 0 or ring_m > 60 or ring_m < 0:
+    if ring_h > 23 or ring_h < 0 or ring_m > 60 or ring_m < 0:
         return "❌ Неверное время" 
 
     res = timetable.adding.add(datetime(year, month, day, ring_h, ring_m))
+
+    if not res:
+        new_timetable, new_muted = timetable.getting.get_time(datetime.now())
+        daemon.update(new_timetable, new_muted)
+
     return "✅ Звонок добавлен" if not res else "❌ Такой звонок уже есть"
 
 def pop(bot: TeleBot, message, daemon: Daemon):
@@ -489,4 +497,9 @@ def pop(bot: TeleBot, message, daemon: Daemon):
         return "❌ Неверное время" 
 
     res = timetable.removing.remove(datetime(year, month, day, ring_h, ring_m))
+    
+    if not res:
+        new_timetable, new_muted = timetable.getting.get_time(datetime.now())
+        daemon.update(new_timetable, new_muted)
+
     return "✅ Звонок удалён" if not res else "❌ Такого звонка не было"
