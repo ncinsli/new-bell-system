@@ -318,23 +318,24 @@ def get_timetable_json(message):
 print(f"[MAIN] Let's go!")
 daemon.start()
 
-try:
-    with open('timetable.json', 'r') as table_file:
-        table = json.loads(table_file.read())
-    
-        if "format" not in table:
-            pass
-
-        if table["format"] == "shift":
-            returned = timetable.middleware.shift_table_handler(table)
-        elif table["format"] == "absolute":
-            returned = timetable.middleware.absolute_table_handler(table)
+if not os.path.exists('database.db'):
+    try:
+        with open('timetable.json', 'r') as table_file:
+            table = json.loads(table_file.read())
         
-        new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-        daemon.update(new_timetable, new_muted)
+            if "format" not in table:
+                pass
 
-except:
-    logging.info('No .json file, using default configs which may not be precisient')
+            if table["format"] == "shift":
+                returned = timetable.middleware.shift_table_handler(table)
+            elif table["format"] == "absolute":
+                returned = timetable.middleware.absolute_table_handler(table)
+            
+            new_timetable, new_muted = timetable.getting.get_time(datetime.now())
+            daemon.update(new_timetable, new_muted)
+
+    except:
+        logging.info('No .json file, using default configs which may not be precisient')
 
 for owner in configuration.owners:
     admins.edit.append(owner)
