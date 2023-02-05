@@ -4,7 +4,6 @@ from termcolor import colored
 import datetime
 import logging 
 
-duration = 3000 #Config
 port = 10
 
 def init():

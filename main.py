@@ -8,6 +8,7 @@ from daemon.daemon import Daemon
 from datetime import datetime
 import configuration
 import replies
+import utils
 
 import admins.edit
 import admins.storage
@@ -25,9 +26,9 @@ import timetable.muting
 if not os.path.exists('logs'):
     os.system("mkdir logs")
     
-log_filename = os.path.join('logs', f'{datetime.now().strftime("%a %d %b %Y %H;%M;%S")}.log')
+log_filename = os.path.join('logs', f'{datetime.now().strftime("%a %d %b %Y %H;%M")}.log')
 
-logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler(log_filename), logging.StreamHandler(sys.stdout)], format='[%(asctime)s] [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler(log_filename, mode='a'), logging.StreamHandler(sys.stdout)], format='[%(asctime)s] [%(levelname)s] %(message)s')
 
 token = os.environ["TOKEN"]
 bot = TeleBot(token)
@@ -42,6 +43,7 @@ date_time = datetime.now()
 refreshed_timetable, refreshed_mutetable = timetable.getting.get_time(datetime(date_time.year, date_time.month, date_time.day))
 
 daemon = Daemon(refreshed_timetable, refreshed_mutetable)
+
 daemon.debugger = bot
 
 @bot.message_handler(commands=["exec"])
@@ -302,7 +304,7 @@ def push(message):
         else:
             result = timetable.middleware.pop(bot, message, daemon)
             bot.reply_to(message, result)
-            logging.info(f'@{str(message.from_user.username).lower()} removed new ring ({message.text})' if not result else '@{str(message.from_user.username).lower()} failed to remove new ring ({message.text}): no such')
+            logging.info(f'@{str(message.from_user.username).lower()} removed new ring ({message.text})' if not result else f'@{str(message.from_user.username).lower()} failed to remove new ring ({message.text}): no such')
     else:
         bot.reply_to(message, replies.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
@@ -310,13 +312,14 @@ def push(message):
 @bot.message_handler(commands=["get_timetable_json"])
 def get_timetable_json(message):
     timetable_file = open('timetable.json')
+
     bot.send_message(message.chat.id, '```' + ' ' + timetable_file.read() + '```', parse_mode='MarkdownV2')
     timetable_file.close()
     logging.info(f'@{str(message.from_user.username).lower()} requested timetable in json')
 
-
 print(f"[MAIN] Let's go!")
 daemon.start()
+sys.excepthook = utils.get_exception_handler(bot)
 
 if not os.path.exists('database.db'):
     try:

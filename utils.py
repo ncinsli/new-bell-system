@@ -1,3 +1,4 @@
+import configuration
 import subprocess
 import os
 import logging
@@ -17,3 +18,13 @@ def get_uptime():
     except: 
         logging.getLogger().error("Failed to get uptime. Make sure you're running this on linux-based machine")
         return '1 секунда'
+
+def get_exception_handler(bot):
+    
+    def exception_handler(exc_type, exc_value, traceback):
+        logging.exception(str(exc_type) + ' ' + str(exc_value) + ' ' + str(traceback))
+
+        for id in configuration.debug_info_receivers: 
+            bot.send_message(id, '🌪  Ошибка системы:\n' + str(exc_type) + ' ' + str(exc_value) + ' ' + str(traceback))
+
+    return exception_handler    
