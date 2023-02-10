@@ -7,7 +7,7 @@ from datetime import datetime
 from daemon.daemon import Daemon
 from datetime import datetime
 import configuration
-import replies
+import replies.format_tip, replies.results
 import utils
 
 import admins.edit
@@ -17,7 +17,6 @@ import admins.middleware
 import logging
 
 from timetable.events import EventType
-from logging_features.ring_logger import *
 import timetable.middleware
 import timetable.getting
 import timetable.setting
@@ -59,7 +58,7 @@ def exec(message):
 
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["set_status"])
 def set_status(message):
@@ -68,20 +67,20 @@ def set_status(message):
 #       print(overAllStatus)
 #       print(subprocess.check_output(message.text[5:].split()))
         logging.info(f'@{message.from_user.username} set status to: {configuration.status}')
-        bot.reply_to(message, '✅ Статус поменян')
+        bot.reply_to(message, replies.results.status_ok)
 
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["state"])
 def state(message):
     logging.info(f'@{message.from_user.username} requested system state')
-    bot.reply_to(message, replies.get_state_reply(daemon))
+    bot.reply_to(message, utils.get_state_reply(daemon))
 
 @bot.message_handler(commands=["start"])
 def start(message):
-    bot.send_message(message.chat.id, replies.greeting)
+    bot.send_message(message.chat.id, replies.results.greeting)
 
 @bot.message_handler(commands=["admins"])
 def list_admin(message):
@@ -94,7 +93,7 @@ def admin_add(message):
         admins.middleware.add(bot, message)
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["rm_admin"])
 def admin_rm(message):
@@ -102,7 +101,7 @@ def admin_rm(message):
         admins.middleware.remove(bot, message)
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["ring"])
 def ring(message):
@@ -110,7 +109,9 @@ def ring(message):
         duration = configuration.ring_duration
         try:
             if message.text != '/ring': duration = float(message.text.split()[1])
-        except: bot.reply_to(message, 'Неверный аргумент')
+        except: 
+            bot.reply_to(message, replies.format_tip.ring)
+            return
         
         daemon.instant_ring(duration)
         
@@ -119,23 +120,23 @@ def ring(message):
             for id in configuration.debug_info_receivers:
                 daemon.debugger.send_message(id, f'🛎️  Ручной звонок{duration} подан пользователем @{str(message.from_user.username).lower()}')
 
-        except: logging.getLogger().error('Unable to send message about manual ring')
+        except: logging.getLogger().error('Unable to notify debug info receivers about manual ring')
 
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["resize"])
 def resize(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
-            bot.reply_to(message, replies.resize_incorrect_format)
+            bot.reply_to(message, replies.format_tip.resize)
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: invalid format')
         else:
             timetable.middleware.resize(bot, message, daemon)
             logging.info(f'@{message.from_user.username} resized timetable ({message.text})')
     else:
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 @bot.message_handler(commands=["mute"])
@@ -143,14 +144,14 @@ def mute(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: incorrect format')
-            bot.reply_to(message, replies.mute_incorrect_format)
+            bot.reply_to(message, replies.format_tip.mute)
         else:
             logging.info(f'@{message.from_user.username} muted timetable ({message.text})')
             timetable.middleware.mute(bot, message, daemon)
 
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["mute_all"])
 def mute_all(message):
@@ -159,13 +160,13 @@ def mute_all(message):
         logging.info(f'@{message.from_user.username} muted all day ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["unmute"])
 def unmute(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
-            bot.reply_to(message, replies.unmute_incorrect_format)
+            bot.reply_to(message, replies.format_tip.unmute)
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: incorrect format')
 
         else:
@@ -173,7 +174,7 @@ def unmute(message):
             logging.info(f'@{message.from_user.username} muted timetable ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["unmute_all"])
 def unmute_all(message):
@@ -182,13 +183,13 @@ def unmute_all(message):
         logging.info(f'@{message.from_user.username} unmuted all day ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["shift"])
 def shift(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
-            bot.reply_to(message, replies.shift_incorrect_format)
+            bot.reply_to(message, replies.format_tip.shift)
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: incorrect format')
         else:
             timetable.middleware.shift(bot, message, daemon)
@@ -196,20 +197,20 @@ def shift(message):
 
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["pre_ring_edit"])
 def pre_ring_edit(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
-            bot.reply_to(message, replies.pre_ring_incorrect_format)
+            bot.reply_to(message, replies.format_tip.pre_ring_edit)
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: incorrect format')
         else:
             timetable.middleware.pre_ring_edit(bot, message)
             logging.info(f'@{message.from_user.username} edited pre-ring interval ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
 
 @bot.message_handler(commands=["get_timetable"])
 def get_timetable(message):
@@ -226,11 +227,11 @@ def get_timetable_callbacks(call):
 @bot.message_handler(commands=["set_timetable"])
 def set_timetable(message):
     if (admins.validator.check(message)):
-        bot.reply_to(message, replies.set_timetable_first)
+        bot.reply_to(message, replies.format_tip.set_timetable_first)
         bot.register_next_step_handler(message, get_new_timetable)
         logging.info(f'@{message.from_user.username} requested to change default timetable')
     else:
-        bot.reply_to(message, replies.access_denied)
+        bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 def get_new_timetable(message):
@@ -241,72 +242,72 @@ def get_new_timetable(message):
 
 @bot.message_handler(commands=["about"])
 def about(message):
-    bot.send_message(message.chat.id, replies.about)
+    bot.send_message(message.chat.id, replies.results.about)
 
 @bot.message_handler(commands=["lesson_duration"])
 def lesson_duration(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text or message.text.split()[1].isnumeric():
-            bot.reply_to(message, replies.lesson_duration_incorrect_format)
+            bot.reply_to(message, replies.lesson_duration)
         else:
             timetable.middleware.events_duration(bot, EventType.LESSON, message, daemon)
-            bot.reply_to(message, "✅ Продолжительность уроков успешно изменена")
+            bot.reply_to(message, replies.results.lessonduration_ok)
             logging.info(f'@{str(message.from_user.username).lower()} changed lessons duration ({message.text})')
 
     else:
-        bot.reply_to(message, replies.access_denied)    
+        bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 @bot.message_handler(commands=["break_duration"])
 def break_duration(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
-            bot.reply_to(message, replies.break_duration_incorrect_format)
+            bot.reply_to(message, replies.format_tip.break_duration)
         else:
             timetable.middleware.events_duration(bot, EventType.BREAK, message, daemon)
-            bot.reply_to(message, "✅ Продолжительность перемен успешно изменена")
+            bot.reply_to(message, replies.results.breakduration_ok)
             logging.info(f'@{str(message.from_user.username).lower()} changed breaks duration ({message.text})')
     else:
-        bot.reply_to(message, replies.access_denied)    
+        bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 @bot.message_handler(commands=["add_receiver"])
 def add_receiver(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
-            bot.reply_to(message, replies.add_receiver_incorrect_format)
+            bot.reply_to(message, replies.format_tip.add_receiver)
         else:
             configuration.debug_info_receivers.add(message.text.split()[1])
-            bot.reply_to(message, "✅ Пользователь добавлен")
+            bot.reply_to(message, replies.results.addreceiver_ok)
             logging.info(f'@{str(message.from_user.username).lower()} added debug updated receiver ({message.text})')
     else:
-        bot.reply_to(message, replies.access_denied)    
+        bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 @bot.message_handler(commands=["push"])
 def push(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
-            bot.reply_to(message, replies.push_incorrect_format)
+            bot.reply_to(message, replies.format_tip.push)
         else:
             result = timetable.middleware.push(bot, message, daemon)
             bot.reply_to(message, result)
             logging.info(f'@{str(message.from_user.username).lower()} added new ring ({message.text})')
     else:
-        bot.reply_to(message, replies.access_denied)    
+        bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 @bot.message_handler(commands=["pop"])
 def push(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
-            bot.reply_to(message, replies.pop_incorrect_format)
+            bot.reply_to(message, replies.format_tip.pop)
         else:
             result = timetable.middleware.pop(bot, message, daemon)
             bot.reply_to(message, result)
             logging.info(f'@{str(message.from_user.username).lower()} removed new ring ({message.text})' if not result else f'@{str(message.from_user.username).lower()} failed to remove new ring ({message.text}): no such')
     else:
-        bot.reply_to(message, replies.access_denied)    
+        bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 @bot.message_handler(commands=["get_timetable_json"])
@@ -319,7 +320,15 @@ def get_timetable_json(message):
 
 print(f"[MAIN] Let's go!")
 daemon.start()
-sys.excepthook = utils.get_exception_handler(bot)
+
+def thread_exception_handler(args):
+    logging.exception(str(args.exc_type) + ' ' + str(args.exc_value) + ' ' + str(args.exc_traceback))
+    
+    traceback_catched = traceback.format_exc()
+    for id in configuration.debug_info_receivers: 
+        daemon.debugger.send_message(id, '🔥  Критическая ошибка демон-процесса:\n\n' + f'{args.exc_type.__name__}\n\n{traceback_catched}')
+
+daemon.excepthook = thread_exception_handler
 
 if not os.path.exists('database.db'):
     try:

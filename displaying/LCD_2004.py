@@ -84,6 +84,6 @@ try:
     def no_more_rings():
         lcd.clear()
         lcd.write_string('No more rings today')
-        print('no more rings')
+        # print('no more rings')
 except:
     print("You are not running the system on a Pi computer. All GPIO logic will be ignored")

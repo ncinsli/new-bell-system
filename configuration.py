@@ -1,8 +1,9 @@
 import sqlite3
 
+port = 10
 connection = sqlite3.connect('database.db', check_same_thread=False)
-owners = ['ncinsli', 'xfx1337']
-debug_info_receivers = set(['399445674', '891078895'])
+owners = ['newbell_admin']
+debug_info_receivers = set(['1134602783'])
 
 time_table_name = 'bells'
 overrided_time_table_name = 'bell_overrides'

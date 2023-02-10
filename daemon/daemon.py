@@ -9,7 +9,6 @@ import traceback
 import daemon.utils as utils
 import telebot
 import time
-from termcolor import colored
 import timetable.utils
 import configuration
 from datetime import datetime
@@ -34,24 +33,16 @@ class Daemon(threading.Thread):
         self.update(table, muted)
         self.day = datetime.now().day
         
-        if (os.system('echo 1 > /sys/class/gpio10/value && echo 0 > /sys/class/gpio10/value') == 0):
+        if (os.system(f'echo 1 > /sys/class/gpio10/value && echo 0 > /sys/class/gpio{configuration.port}/value') == 0):
             self.gpio_mode = True
 
         logging.info(f'GPIO_MODE: {self.gpio_mode}')
         
         ring_callbacks.init()
         self.update_ring_order()
-        threading.excepthook = self.exception_handler
 
         try: displaying.LCD_2004.initial_output(self.today_timetable)
         except: print("[GPIO] .initial_output")
-
-    def exception_handler(self, args):
-        logging.exception(str(args.exc_type) + ' ' + str(args.exc_value) + ' ' + str(args.exc_traceback))
-        
-        traceback_catched = traceback.format_exc()
-        for id in configuration.debug_info_receivers: 
-            self.debugger.send_message(id, '🔥  Критическая ошибка демон-процесса:\n\n' + f'{args.exc_type.__name__}\n\n{traceback_catched}')
 
     def update_ring_order(self):
         self.order = utils.nearest_forward_ring_index(self.today_timetable)
@@ -63,7 +54,6 @@ class Daemon(threading.Thread):
         
         try: displaying.LCD_2004.update(self.today_timetable, self.order, self.next_called_timing)
         except: print("[GPIO] .update")
-
         timetable_str = str(self.today_timetable).replace("'", "")
         logging.info(f'Updated timetable: {timetable_str}')
         logging.info(f'Updated muted list: {str(self.muted_rings)}')
@@ -86,23 +76,25 @@ class Daemon(threading.Thread):
 
                 if self.muted_rings[self.order] == 0:
                     logging.warn(f'Started ring for {configuration.ring_duration} seconds')
-                    raise Exception('s')
                     ring_callbacks.start_ring()
                     time.sleep(configuration.ring_duration)
                     ring_callbacks.stop_ring()
-
                     logging.warn(f'Stopped ring')
 
                     self.last_called_timing = timing
 
-                    for id in configuration.debug_info_receivers:
-                        self.debugger.send_message(id, '🛎️  Звонок по расписанию успешно подан')
+                    try:
+                        for id in configuration.debug_info_receivers:
+                            self.debugger.send_message(id, '🛎️  Звонок по расписанию успешно подан')
+                    except: logging.error("Unable to notify debug info receivers about the ring")
 
                 else:
                     logging.warn(f'No ring (muted)')
                     self.last_called_timing = timing
-                    for id in configuration.debug_info_receivers:
-                        self.debugger.send_message(id, '🚫 Звонок по расписанию заглушен и не подан')
+                    try:
+                        for id in configuration.debug_info_receivers:
+                            self.debugger.send_message(id, '🚫 Звонок по расписанию заглушен и не подан')
+                    except: logging.error("Unable to notify debug info receivers about the muted ring")
 
                 tempIdx = self.today_timetable.index(timing)
                 if tempIdx != len(self.today_timetable)-1:
@@ -118,10 +110,12 @@ class Daemon(threading.Thread):
                     except: print("[GPIO] .no_more_rings")
 
                     logging.warn(f'No more rings')
-                   
-                    for id in configuration.debug_info_receivers:
-                        self.debugger.send_message(id, '⏰ Сегодня больше нет звонков')
-                    
+                
+                    try:
+                        for id in configuration.debug_info_receivers:
+                            self.debugger.send_message(id, '⏰ Сегодня больше нет звонков')
+                    except: logging.error("Unable to notify debug info receivers about the ending of all rings")
+
 
                 if self.order + 1 <= len(self.today_timetable) - 1:
                     if self.today_timetable[self.order+1] == self.today_timetable[self.order]:
@@ -142,8 +136,10 @@ class Daemon(threading.Thread):
                     
                     logging.warn(f'Stopped pre-ring')
 
-                    for id in configuration.debug_info_receivers:
-                        self.debugger.send_message(id, '🧨  Предзвонок по расписанию успешно подан')
+                    try:
+                        for id in configuration.debug_info_receivers:
+                            self.debugger.send_message(id, '🧨  Предзвонок по расписанию успешно подан')
+                    except: logging.error("Unable to notify debug info receivers about pre-ring")
 
                     self.last_called_timing = timing
                 else:
@@ -151,10 +147,16 @@ class Daemon(threading.Thread):
                     self.last_called_timing = timing
 
     def instant_ring(self, duration: float):
-        logging.warn(f'Started ring for {duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration} seconds')
-        ring_callbacks.start_ring()
-        time.sleep(duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration)
-        ring_callbacks.stop_ring()
+        try:
+            logging.warn(f'Started ring for {duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration} seconds')
+            ring_callbacks.start_ring()
+            time.sleep(duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration)
+            ring_callbacks.stop_ring()
 
-        logging.warn(f'Stopped ring')
-
+            logging.warn(f'Stopped ring')
+        except:
+            logging.critical('Unable to ring manually')
+        
+            try:
+                ring_callbacks.stop_ring()
+            except: os.system('reboot')
