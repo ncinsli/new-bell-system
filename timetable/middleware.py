@@ -251,7 +251,7 @@ def resize(bot: TeleBot, message, daemon: Daemon):
     year = datetime.now().year
     delta = args[0]
     event_type = args[0]
-    order = int(args[1])
+    order = args[1]
     delta = args[2]
 
     if '.' in message.text:
@@ -260,9 +260,10 @@ def resize(bot: TeleBot, message, daemon: Daemon):
         year = int(args[0].split('.')[2])
        
         event_type = args[1]
-        order = int(args[2])
+        order = args[2]
         delta = args[3]
 
+    order = int(order)
     date = datetime(year, month, day)
     
     in_seconds = utils.time_literals_to_seconds(delta)
