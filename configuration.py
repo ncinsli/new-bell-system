@@ -14,3 +14,5 @@ ring_duration = 3
 max_ring_duration = 4
 pre_ring_duration = 1
 status = 'Пусто'
+
+default_ring = 0

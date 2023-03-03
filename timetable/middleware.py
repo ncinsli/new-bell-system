@@ -19,6 +19,7 @@ import timetable.adding
 import timetable.removing
 import timetable.setting
 import timetable.overrides
+import timetable.sounds
 import timetable.timetable_defaultvalues as setup
 import configuration
 
@@ -43,6 +44,7 @@ def init():
         FromDay TEXT DEFAULT "01.09",
         TillDay TEXT  DEFAULT "31.05",
         muted INTEGER DEFAULT 0,
+        sound INTEGER DEFAULT 0,
         PRIMARY KEY(id AUTOINCREMENT)
     ) 
     """)
@@ -63,40 +65,20 @@ def init():
         day INTEGER NOT NULL,
         time TEXT NOT NULL,
         muted INTEGER DEFAULT 0,
+        sound INTEGER DEFAULT 0,
         PRIMARY KEY(id AUTOINCREMENT)
     ) 
     """)
     connection.commit()
 
-def get_time_edited(bot: TeleBot, call):
-    call_data = call.data.split()
-    dmy = call_data[1].split('.')
-    day, month, year = int(dmy[0]), int(dmy[1]), int(dmy[2])
-    date = datetime(year, month, day)
-    bot.parse_mode = 'HTML'
-
-    to_out = get_time_raw(date)
-
-    prev_day = date - timedelta(days=1)
-    dmy_prev = f'{prev_day.day}.{prev_day.month}.{prev_day.year}'
-
-    next_day = date + timedelta(days=1)
-    dmy_next = f'{next_day.day}.{next_day.month}.{next_day.year}'
-    go_left_button = types.InlineKeyboardButton(text="<", callback_data=f"/get_timetable {dmy_prev}")
-    go_right_button = types.InlineKeyboardButton(text=">", callback_data=f"/get_timetable {dmy_next}")
-
-    bot.edit_message_text(f"""
-    🗓 Расписание на <b>{utils.get_weekday_russian(date)}, {date.day}</b>:\n\n{to_out}
-    """, call.message.chat.id, call.message.message_id, reply_markup=types.InlineKeyboardMarkup().row(go_left_button, go_right_button))
-
 def get_time_raw(date: datetime):
-    list_db, muted = timetable.getting.get_time(date)
+    list_db, sounds = timetable.getting.get_time(date)
     combined = []
     # print(list_db, muted)
     for i in range(0, len(list_db) - 1):
         if i % 2 == 0:
-            to_append = ('🔇' if muted[i] else '') + '<b>• ' + list_db[i] + ' — ' + list_db[i + 1] + '</b>' + ('🔇' if muted[i + 1] else '')
-        else: to_append = '   ' + ('🔇' if muted[i] else '') + list_db[i] + ' — ' + list_db[i + 1] + ('🔇' if muted[i + 1] else '')
+            to_append = ('🔇' if sounds[i] == -1 else '') + '<b>• ' + list_db[i] + ' — ' + list_db[i + 1] + '</b>' + ('🔇' if sounds[i + 1] == -1 else '')
+        else: to_append = '   ' + ('🔇' if sounds[i] == -1 else '') + list_db[i] + ' — ' + list_db[i + 1] + ('🔇' if sounds[i + 1] == -1 else '')
 
         combined.append(to_append)
 
@@ -276,8 +258,8 @@ def resize(bot: TeleBot, message, daemon: Daemon):
 
     bot.reply_to(message, f"{'Урок' if event_type == 'lesson' else 'Перемена'} № {order} теперь {'длиннее' if in_seconds > 0 else 'короче'} на {abs(in_seconds) // 60} минут(ы)")
     
-    new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-    daemon.update(new_timetable, new_muted)
+    new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
+    daemon.update(new_timetable, new_sounds)
 
 def shift(bot: TeleBot, message, daemon: Daemon):
     args = message.text.split()[1:]
@@ -460,7 +442,7 @@ def push(bot: TeleBot, message, daemon: Daemon):
         ring_h = int(ring_time[0])
         ring_m = int(ring_time[1])
 
-    if ring_h > 23 or ring_h < 0 or ring_m > 60 or ring_m < 0:
+    if ring_h > 23 or ring_h < 0 or ring_m > 59 or ring_m < 0:
         return "❌ Неверное время" 
 
     res = timetable.adding.add(datetime(year, month, day, ring_h, ring_m))
@@ -494,13 +476,58 @@ def pop(bot: TeleBot, message, daemon: Daemon):
         ring_h = int(ring_time[0])
         ring_m = int(ring_time[1])
         
-    if ring_h > 23 or ring_h < 0 or ring_m > 60 or ring_m < 0:
+    if ring_h > 23 or ring_h < 0 or ring_m > 59 or ring_m < 0:
         return "❌ Неверное время" 
 
     res = timetable.removing.remove(datetime(year, month, day, ring_h, ring_m))
     
     if not res:
-        new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-        daemon.update(new_timetable, new_muted)
+        new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
+        daemon.update(new_timetable, new_sounds)
 
     return "✅ Звонок удалён" if not res else "❌ Такого звонка не было"
+
+
+def set_sound(bot: TeleBot, message, daemon: Daemon):
+    args = message.text.split()[1:]
+
+    if '.' in message.text:
+        day = int(args[0].split('.')[0])
+        month = int(args[0].split('.')[1])
+        year = int(args[0].split('.')[2])
+
+        if ':' not in message.text:
+            res = timetable.sounds.set_sound_day(datetime(year, month, day), int(args[1]))
+            if not res:
+                new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
+                daemon.update(new_timetable, new_sounds)
+
+            return "✅ Мелодия добавлена на звонок" if not res else "❌ Мелодия не добавлена на звонок"
+
+        ring_time = args[1].split(':')
+        order = int(args[2])
+
+        ring_h = int(ring_time[0])
+        ring_m = int(ring_time[1])
+
+    else:
+        day = datetime.now().day
+        month = datetime.now().month
+        year = datetime.now().year
+        
+        ring_time = args[0].split(':')
+        order = int(args[1])
+
+        ring_h = int(ring_time[0])
+        ring_m = int(ring_time[1])
+        
+    if ring_h > 23 or ring_h < 0 or ring_m > 59 or ring_m < 0:
+        return "❌ Неверное время" 
+
+    res = timetable.sounds.set_sound(datetime(year, month, day, ring_h, ring_m), order)
+    
+    if not res:
+        new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
+        daemon.update(new_timetable, new_sounds)
+
+    return "✅ Мелодия добавлена на звонок" if not res else "❌ Такого звонка не было"

@@ -5,7 +5,7 @@ import subprocess
 from telebot import *
 from datetime import datetime
 from daemon.daemon import Daemon
-from datetime import datetime
+from datetime import datetime, timedelta
 import configuration
 import replies.format_tip, replies.results
 import utils
@@ -39,9 +39,9 @@ timetable.middleware.init()
 admins.middleware.init()
 
 date_time = datetime.now()
-refreshed_timetable, refreshed_mutetable = timetable.getting.get_time(datetime(date_time.year, date_time.month, date_time.day))
+refreshed_timetable, refreshed_soundtable = timetable.getting.get_time(datetime(date_time.year, date_time.month, date_time.day))
 
-daemon = Daemon(refreshed_timetable, refreshed_mutetable)
+daemon = Daemon(refreshed_timetable, refreshed_soundtable)
 
 daemon.debugger = bot
 
@@ -222,7 +222,29 @@ def get_timetable_callbacks(call):
     if call.message:
         call_data = call.data.split()
         if call_data[0] == '/get_timetable':
-            timetable.middleware.get_time_edited(bot, call)
+        
+            call_data = call.data.split()
+          
+            dmy = call_data[1].split('.')
+            day, month, year = int(dmy[0]), int(dmy[1]), int(dmy[2])
+            date = datetime(year, month, day)
+          
+            bot.parse_mode = 'HTML'
+          
+            to_out = timetable.middleware.get_time_raw(date)
+          
+            prev_day = date - timedelta(days=1)
+            dmy_prev = f'{prev_day.day}.{prev_day.month}.{prev_day.year}'
+          
+            next_day = date + timedelta(days=1)
+            dmy_next = f'{next_day.day}.{next_day.month}.{next_day.year}'
+          
+            go_left_button = types.InlineKeyboardButton(text="<", callback_data=f"/get_timetable {dmy_prev}")
+            go_right_button = types.InlineKeyboardButton(text=">", callback_data=f"/get_timetable {dmy_next}")
+          
+            bot.edit_message_text(f"""
+            🗓 Расписание на <b>{timetable.utils.get_weekday_russian(date)}, {date.day}</b>:\n\n{to_out}
+            """, call.message.chat.id, call.message.message_id, reply_markup=types.InlineKeyboardMarkup().row(go_left_button, go_right_button))
 
 @bot.message_handler(commands=["set_timetable"])
 def set_timetable(message):
@@ -317,6 +339,20 @@ def get_timetable_json(message):
     bot.send_message(message.chat.id, '```' + ' ' + timetable_file.read() + '```', parse_mode='MarkdownV2')
     timetable_file.close()
     logging.info(f'@{str(message.from_user.username).lower()} requested timetable in json')
+
+@bot.message_handler(commands=["set_sound"])
+def set_sound(message):
+    if (admins.validator.check(message)):
+        if ' ' not in message.text:
+            bot.reply_to(message, replies.format_tip.set_sound)
+        else:
+            result = timetable.middleware.set_sound(bot, message, daemon)
+            bot.reply_to(message, result)
+            logging.info(f'@{str(message.from_user.username).lower()} set new sound ({message.text})')
+    else:
+        bot.reply_to(message, replies.results.access_denied)    
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
 
 print(f"[MAIN] Let's go!")
 daemon.start()
