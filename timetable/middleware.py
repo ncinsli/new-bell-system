@@ -28,6 +28,7 @@ connection = configuration.connection
 cursor = connection.cursor()
 table = configuration.time_table_name
 table_override = configuration.overrided_time_table_name
+table_sounds = configuration.sounds_table_name
 
 def init():
     cursor.execute(f"""
@@ -68,6 +69,14 @@ def init():
         sound INTEGER DEFAULT 0,
         PRIMARY KEY(id AUTOINCREMENT)
     ) 
+    """)
+    connection.commit()
+
+    cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS {table_sounds} (
+        id INTEGER,
+        filename TEXT
+    )
     """)
     connection.commit()
 
@@ -533,3 +542,19 @@ def set_sound(bot: TeleBot, message, daemon: Daemon):
         daemon.update(new_timetable, new_sounds)
 
     return "✅ Мелодия добавлена на звонок" if not res else "❌ Такого звонка не было"
+
+def get_sounds_last_id():
+    cursor.execute(f"""SELECT MAX(id) FROM {table_sounds}""")
+    ret = cursor.fetchone()[0]
+    if ret == None:
+        return -1
+    else:
+        return ret
+
+def get_sounds():
+    ret = "Таблица мелодий\n"
+    cursor.execute(f"""SELECT * FROM {table_sounds}""")
+    rows = cursor.fetchall()
+    for r in rows:
+        ret += f"{r[0]} - {r[1]}\n"
+    return ret

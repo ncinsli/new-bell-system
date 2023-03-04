@@ -4,6 +4,7 @@ import sqlite3
 import calendar
 import configuration
 import timetable.resizing
+import timetable.middleware
 from daemon.daemon import Daemon
 from datetime import datetime
 from telebot import TeleBot
@@ -14,6 +15,7 @@ import logging
 
 table_override = configuration.overrided_time_table_name
 table = configuration.time_table_name
+table_sounds = configuration.sounds_table_name
 connection = configuration.connection
 
 def set_sound(date_time: datetime, order):
@@ -84,6 +86,7 @@ def set_sound_day(date_time: datetime, order):
     return 0
 
 def upload_sound(bot: TeleBot, message, daemon):
+    cursor = connection.cursor()
     # Загрузка файла
     if message.content_type == 'document':
         try:
@@ -107,6 +110,8 @@ def upload_sound(bot: TeleBot, message, daemon):
 
     sound_path = "./sounds/" + file_name
 
+    print(timetable.middleware.get_sounds_last_id())
+
     if os.path.exists(sound_path):
         return "❌ Звуковой файл с таким именем уже существует!"
     else:
@@ -114,7 +119,10 @@ def upload_sound(bot: TeleBot, message, daemon):
             with open(sound_path, 'wb') as file:
                 file.write(content)
             sound = AudioSegment.from_file(sound_path, file_name[-3::])
-            daemon.add_sound(sound)
+            last_id = timetable.middleware.get_sounds_last_id()+1
+            daemon.add_sound(last_id, sound) # TODO: or manual
+            cursor.execute(f"""INSERT INTO {table_sounds}(id, filename) Values(?, ?)""", [last_id, file_name]) # сохранить в БД
+            connection.commit()
         except:
             return "❌ Ошибка при чтении звукового файла!"
     return "✅ Звуковой файл успешно записан"

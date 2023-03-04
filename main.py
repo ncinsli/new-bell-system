@@ -368,9 +368,12 @@ def upload_sound(message):
 
 def get_new_sound(message):
     res = timetable.sounds.upload_sound(bot, message, daemon)
-    #returnedMessage = timetable.middleware.set_time(bot, message, daemon)
     bot.reply_to(message, res)
     logging.info(f'@{message.from_user.username} uploaded sound file')
+
+@bot.message_handler(commands=["sounds"])
+def sounds(message):
+    bot.reply_to(message, timetable.middleware.get_sounds())
 
 print(f"[MAIN] Let's go!")
 daemon.start()

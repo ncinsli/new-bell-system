@@ -8,6 +8,7 @@ debug_info_receivers = set(['1134602783'])
 time_table_name = 'bells'
 overrided_time_table_name = 'bell_overrides'
 admin_table_name = 'admins'
+sounds_table_name = 'sounds'
 pre_ring_delta = 120
 
 ring_duration = 3
