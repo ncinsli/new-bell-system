@@ -23,6 +23,7 @@ class Daemon(threading.Thread):
     gpio_mode = False
     debugger : telebot.TeleBot
     day: int
+    sounds: list # Хранение аудиофайлов для проигрывания
 
     def __init__(self, table, muted):
         super().__init__()
@@ -43,6 +44,11 @@ class Daemon(threading.Thread):
 
         try: displaying.LCD_2004.initial_output(self.today_timetable)
         except: print("[GPIO] .initial_output")
+
+        self.sounds = []
+
+    def add_sound(self, sound):
+        self.sounds.append(sound)
 
     def update_ring_order(self):
         self.order = utils.nearest_forward_ring_index(self.today_timetable)

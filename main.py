@@ -24,6 +24,8 @@ import timetable.muting
 
 if not os.path.exists('logs'):
     os.system("mkdir logs")
+if not os.path.exists('sounds'):
+    os.system("mkdir sounds")
     
 log_filename = os.path.join('logs', f'{datetime.now().strftime("%a %d %b %Y %H;%M")}.log')
 
@@ -353,6 +355,22 @@ def set_sound(message):
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
+@bot.message_handler(commands=["upload_sound"])
+def upload_sound(message):
+    if (admins.validator.check(message)):
+        if ' ' not in message.text:
+            bot.reply_to(message, replies.format_tip.upload_sound)
+            bot.register_next_step_handler(message, get_new_sound)
+            logging.info(f'@{message.from_user.username} requested to upload sound file')
+    else:
+        bot.reply_to(message, replies.results.access_denied)
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+def get_new_sound(message):
+    res = timetable.sounds.upload_sound(bot, message, daemon)
+    #returnedMessage = timetable.middleware.set_time(bot, message, daemon)
+    bot.reply_to(message, res)
+    logging.info(f'@{message.from_user.username} uploaded sound file')
 
 print(f"[MAIN] Let's go!")
 daemon.start()

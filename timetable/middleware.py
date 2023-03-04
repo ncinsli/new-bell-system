@@ -1,5 +1,5 @@
 #TODO: Каталог ошибок, кодовых номеров и соответствующих строк
-INCORRECT_FORMAT_ERROR = "Ошибка при чтении файла. Неверный формат"
+INCORRECT_FORMAT_ERROR = "❌ Ошибка при чтении файла. Неверный формат"
 
 import sqlite3
 from datetime import datetime, timedelta
@@ -111,14 +111,16 @@ def get_time(bot: TeleBot, message):
     """, reply_markup=types.InlineKeyboardMarkup().row(go_left_button, go_right_button))
 
 def set_time(bot: TeleBot, message, daemon: Daemon):
+    try:
+        # Свойства файла для загрузки
+        file_name = message.document.file_name
+        file_id = message.document.file_name
+        file_id_info = bot.get_file(message.document.file_id)
 
-    # Свойства файла для загрузки
-    file_name = message.document.file_name
-    file_id = message.document.file_name
-    file_id_info = bot.get_file(message.document.file_id)
 
-
-    content = bot.download_file(file_id_info.file_path).decode('utf-8')
+        content = bot.download_file(file_id_info.file_path).decode('utf-8')
+    except:
+        return INCORRECT_FORMAT_ERROR
 
     #print(content) # Текст файла
     # TODO: Загрузка json -> изменение дефолтной БД (+ скопировать старую, наверное)
