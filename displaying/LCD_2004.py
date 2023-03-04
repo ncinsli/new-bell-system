@@ -9,7 +9,7 @@ try:
     i2c_expander = 'PCF8574'
     cols = 20
     rows = 4
-    port = 0
+    port = 3
     address = 0x27
     lcd = i2c.CharLCD(i2c_expander, address, port=port, charmap=charmap,
                     cols=cols, rows=rows)
