@@ -16,14 +16,13 @@ import daemon.ring_callbacks as ring_callbacks
 
 class Daemon(threading.Thread):
     today_timetable: list
-    muted_rings: list
+    sounds: list
     order = 0
     last_called_timing: str = '00:00'
     next_called_timing: str = '00:00'
     gpio_mode = False
     debugger : telebot.TeleBot
     day: int
-    sounds: dict # Хранение аудиофайлов для проигрывания
 
     def __init__(self, table, muted):
         super().__init__()
@@ -45,24 +44,19 @@ class Daemon(threading.Thread):
         try: displaying.LCD_2004.initial_output(self.today_timetable)
         except: print("[GPIO] .initial_output")
 
-        self.sounds = {}
-
-    def add_sound(self, id, sound):
-        self.sounds[id] = sound
-
     def update_ring_order(self):
         self.order = utils.nearest_forward_ring_index(self.today_timetable)
         logging.info(f'Updated ring order to: {self.order}')
 
     def update(self, new_timetable, new_muted):
-        self.today_timetable, self.muted_rings = new_timetable, new_muted # Обращаться к sqlite из другого потока нельзя
+        self.today_timetable, self.sounds = new_timetable, new_muted # Обращаться к sqlite из другого потока нельзя
         self.today_timetable = list(map(lambda e: e.zfill(5), self.today_timetable))
         
         try: displaying.LCD_2004.update(self.today_timetable, self.order, self.next_called_timing)
         except: print("[GPIO] .update")
         timetable_str = str(self.today_timetable).replace("'", "")
         logging.info(f'Updated timetable: {timetable_str}')
-        logging.info(f'Updated muted list: {str(self.muted_rings)}')
+        logging.info(f'Updated muted list: {str(self.sounds)}')
 
     def run(self):
         while True:
@@ -80,9 +74,10 @@ class Daemon(threading.Thread):
                 self.order = self.today_timetable.index(str(datetime.now().time())[:5])
                 logging.info(f'It is an event: order is now {self.order}')
 
-                if self.muted_rings[self.order] == 0:
+                if self.sounds[self.order] != -1:
                     logging.warn(f'Started ring for {configuration.ring_duration} seconds')
-                    ring_callbacks.start_ring()
+                    
+                    ring_callbacks.start_ring(self.sounds[self.order])
                     time.sleep(configuration.ring_duration)
                     ring_callbacks.stop_ring()
                     logging.warn(f'Stopped ring')
@@ -133,10 +128,10 @@ class Daemon(threading.Thread):
 
                 if self.order % 2 != 0: continue
 
-                if self.muted_rings[self.order] == 0:
+                if self.sounds[self.order] != -1:
                     logging.warn(f'Started pre-ring for {configuration.pre_ring_duration} seconds')
 
-                    ring_callbacks.start_pre_ring()
+                    ring_callbacks.start_pre_ring(self.sounds[self.order])
                     time.sleep(configuration.pre_ring_duration)
                     ring_callbacks.stop_ring()
                     
@@ -152,10 +147,10 @@ class Daemon(threading.Thread):
                     logging.warn(f'No pre-ring (muted)')
                     self.last_called_timing = timing
 
-    def instant_ring(self, duration: float):
+    def instant_ring(self, duration: float, sound = 0):
         try:
             logging.warn(f'Started ring for {duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration} seconds')
-            ring_callbacks.start_ring()
+            ring_callbacks.start_ring(sound)
             time.sleep(duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration)
             ring_callbacks.stop_ring()
 

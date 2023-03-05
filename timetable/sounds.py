@@ -1,5 +1,5 @@
 import os
-from pydub import AudioSegment # Проверка формата файла
+from pydub import AudioSegment 
 import sqlite3
 import calendar
 import configuration
@@ -15,7 +15,6 @@ import logging
 
 table_override = configuration.overrided_time_table_name
 table = configuration.time_table_name
-table_sounds = configuration.sounds_table_name
 connection = configuration.connection
 
 def set_sound(date_time: datetime, order):
@@ -84,45 +83,3 @@ def set_sound_day(date_time: datetime, order):
         connection.commit()
 
     return 0
-
-def upload_sound(bot: TeleBot, message, daemon):
-    cursor = connection.cursor()
-    # Загрузка файла
-    if message.content_type == 'document':
-        try:
-            file_name = message.document.file_name
-            file_id = message.document.file_name
-            file_id_info = bot.get_file(message.document.file_id)
-
-            content = bot.download_file(file_id_info.file_path)
-        except:
-            return "❌ Ошибка при получении звукового файла!" 
-    elif message.content_type == 'audio':
-        try:
-            file_name = message.audio.file_name
-            file_id = message.audio.file_name
-            file_id_info = bot.get_file(message.audio.file_id)
-
-            content = bot.download_file(file_id_info.file_path)
-        except:
-            return "❌ Ошибка при получении звукового файла!" 
-    
-
-    sound_path = "./sounds/" + file_name
-
-    print(timetable.middleware.get_sounds_last_id())
-
-    if os.path.exists(sound_path):
-        return "❌ Звуковой файл с таким именем уже существует!"
-    else:
-        try:
-            with open(sound_path, 'wb') as file:
-                file.write(content)
-            sound = AudioSegment.from_file(sound_path, file_name[-3::])
-            last_id = timetable.middleware.get_sounds_last_id()+1
-            daemon.add_sound(last_id, sound) # TODO: or manual
-            cursor.execute(f"""INSERT INTO {table_sounds}(id, filename) Values(?, ?)""", [last_id, file_name]) # сохранить в БД
-            connection.commit()
-        except:
-            return "❌ Ошибка при чтении звукового файла!"
-    return "✅ Звуковой файл успешно записан"

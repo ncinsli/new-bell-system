@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from telebot import TeleBot
 import timetable.muting as timetable
 import json
+import daemon.ring_callbacks
 import timetable.resizing
 import os
 import sys
@@ -28,7 +29,6 @@ connection = configuration.connection
 cursor = connection.cursor()
 table = configuration.time_table_name
 table_override = configuration.overrided_time_table_name
-table_sounds = configuration.sounds_table_name
 
 def init():
     cursor.execute(f"""
@@ -69,14 +69,6 @@ def init():
         sound INTEGER DEFAULT 0,
         PRIMARY KEY(id AUTOINCREMENT)
     ) 
-    """)
-    connection.commit()
-
-    cursor.execute(f"""
-    CREATE TABLE IF NOT EXISTS {table_sounds} (
-        id INTEGER,
-        filename TEXT
-    )
     """)
     connection.commit()
 
@@ -544,17 +536,62 @@ def set_sound(bot: TeleBot, message, daemon: Daemon):
     return "✅ Мелодия добавлена на звонок" if not res else "❌ Такого звонка не было"
 
 def get_sounds_last_id():
-    cursor.execute(f"""SELECT MAX(id) FROM {table_sounds}""")
-    ret = cursor.fetchone()[0]
-    if ret == None:
-        return -1
-    else:
-        return ret
+    sounds = os.listdir(os.path.abspath('sounds'))
+
+    if len(sounds) > 0: 
+        return int(sounds[-1].split()[0][1:-1])
+    
+    else: return -1
 
 def get_sounds():
-    ret = "Таблица мелодий\n"
-    cursor.execute(f"""SELECT * FROM {table_sounds}""")
-    rows = cursor.fetchall()
-    for r in rows:
-        ret += f"{r[0]} - {r[1]}\n"
+    ret = "🎵 Таблица мелодий\n"
+
+    sounds = os.listdir(os.path.abspath('sounds'))
+    
+    for r in sounds:
+        print(r.split())
+        if len(r.split()) > 1:
+            open_index = r.index('[')
+            close_index = r.index(']')
+
+            ret += f"{r.split()[0][1:-1]} - {r[close_index + 1:].replace('_', ' ')[:-4]}\n"
+    
     return ret
+
+def upload_sound(bot: TeleBot, message):
+    if message.content_type == 'document':
+        try:
+            file_name = message.document.file_name
+            file_id = message.document.file_name
+            file_id_info = bot.get_file(message.document.file_id)
+
+            content = bot.download_file(file_id_info.file_path)
+        except:
+            return "❌ Ошибка при получении звукового файла!" 
+  
+    elif message.content_type == 'audio':
+        try:
+            file_name = str(message.audio.file_name)
+            file_id = message.audio.file_name
+            file_id_info = bot.get_file(message.audio.file_id)
+            content = bot.download_file(file_id_info.file_path)
+        except:
+            return "❌ Ошибка при получении звукового файла!" 
+    
+
+    sound_path = f"./sounds/[{get_sounds_last_id() + 1}] {file_name}"
+
+    if os.path.exists(sound_path):
+        return "❌ Звуковой файл с таким именем уже существует!"
+    else:
+        try:
+            with open(sound_path, 'wb') as file:
+                file.write(content)
+
+            daemon.ring_callbacks.load_sound(sound_path)
+
+        except Exception as e:
+            print(e)
+            return "❌ Ошибка при чтении звукового файла!"
+        
+    return "✅ Звуковой файл успешно записан"

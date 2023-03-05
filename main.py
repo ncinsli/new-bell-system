@@ -24,6 +24,7 @@ import timetable.muting
 
 if not os.path.exists('logs'):
     os.system("mkdir logs")
+
 if not os.path.exists('sounds'):
     os.system("mkdir sounds")
     
@@ -367,7 +368,7 @@ def upload_sound(message):
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 def get_new_sound(message):
-    res = timetable.sounds.upload_sound(bot, message, daemon)
+    res = timetable.middleware.upload_sound(bot, message)
     bot.reply_to(message, res)
     logging.info(f'@{message.from_user.username} uploaded sound file')
 
