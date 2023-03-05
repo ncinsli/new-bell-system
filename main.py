@@ -368,20 +368,39 @@ def upload_sound(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.upload_sound)
+            return
+
+        else:
+            id = message.text.split()[1]
             bot.register_next_step_handler(message, get_new_sound)
             logging.info(f'@{message.from_user.username} requested to upload sound file')
     else:
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
-def get_new_sound(message):
-    res = timetable.middleware.upload_sound(bot, message)
+def get_new_sound(message, id = ''):
+    res = timetable.middleware.upload_sound(bot, message, id)
     bot.reply_to(message, res)
     logging.info(f'@{message.from_user.username} uploaded sound file')
 
 @bot.message_handler(commands=["sounds"])
 def sounds(message):
     bot.reply_to(message, timetable.middleware.get_sounds())
+
+@bot.message_handler(commands=["replace_sound"])
+def replace_sound(message):
+    if (admins.validator.check(message)):
+        if ' ' not in message.text:
+            bot.reply_to(message, replies.format_tip.replace_sound)
+            return
+        
+        id = message.text.split()[1]
+        
+        bot.register_next_step_handler(message, get_new_sound, id)
+        logging.info(f'@{message.from_user.username} requested to replace sound file')
+    else:
+        bot.reply_to(message, replies.results.access_denied)
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 print(f"[MAIN] Let's go!")
 daemon.start()

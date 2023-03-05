@@ -25,18 +25,17 @@ def load_sound(sound_path: str):
     close_index = sound_path.index(']')
     sounds[int(sound_path[open_index + 1 : close_index])] = sound
 
-    print(sounds)
-
 def ring(sound_index: int, duration = configuration.ring_duration):
     os.system(f'echo 1 > /sys/class/gpio/gpio{port}/value')
-    time.sleep(100) # Для передачи системе оповещения тока, который скажет ей включить линейный вход, нужно время
+    time.sleep(0.1) # Для передачи системе оповещения тока, который скажет ей включить линейный вход, нужно время
 
     try:
         playback.play(sounds[sound_index][0:duration * 1000])
-    
+        stop_ring()
+
     except Exception as e:
         logging.getLogger().critical("Unable to start sound ring")
-        time.sleep(duration - 100)
+        time.sleep(duration - 0.1)
         stop_ring()
 
 def stop_ring():

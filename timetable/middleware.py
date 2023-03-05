@@ -558,7 +558,7 @@ def get_sounds():
     
     return ret
 
-def upload_sound(bot: TeleBot, message):
+def upload_sound(bot: TeleBot, message, id = ''):
     if message.content_type == 'document':
         try:
             file_name = message.document.file_name
@@ -578,8 +578,8 @@ def upload_sound(bot: TeleBot, message):
         except:
             return "❌ Ошибка при получении звукового файла!" 
     
-
-    sound_path = f"./sounds/[{get_sounds_last_id() + 1}] {file_name}"
+    
+    sound_path = f"./sounds/[{id}] {file_name}"
 
     if os.path.exists(sound_path):
         return "❌ Звуковой файл с таким именем уже существует!"
