@@ -110,13 +110,20 @@ def admin_rm(message):
 def ring(message):
     if admins.validator.check(message):
         duration = configuration.ring_duration
+        sound = 0
+
         try:
-            if message.text != '/ring': duration = float(message.text.split()[1])
+            args = message.text.split()[1:]
+            if len(args) > 0: 
+                duration = float(args[0])
+            if len(args) > 1:
+                sound = float(args[1])
+
         except: 
             bot.reply_to(message, replies.format_tip.ring)
             return
         
-        daemon.instant_ring(duration)
+        daemon.instant_ring(duration, sound)
         
         try:
             duration = '' if duration == configuration.ring_duration else (" длиной в " + str(duration) + " секунд")

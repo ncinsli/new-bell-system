@@ -77,9 +77,7 @@ class Daemon(threading.Thread):
                 if self.sounds[self.order] != -1:
                     logging.warn(f'Started ring for {configuration.ring_duration} seconds')
                     
-                    ring_callbacks.start_ring(self.sounds[self.order])
-                    time.sleep(configuration.ring_duration)
-                    ring_callbacks.stop_ring()
+                    ring_callbacks.ring(self.sounds[self.order], configuration.ring_duration)
                     logging.warn(f'Stopped ring')
 
                     self.last_called_timing = timing
@@ -131,9 +129,7 @@ class Daemon(threading.Thread):
                 if self.sounds[self.order] != -1:
                     logging.warn(f'Started pre-ring for {configuration.pre_ring_duration} seconds')
 
-                    ring_callbacks.start_pre_ring(self.sounds[self.order])
-                    time.sleep(configuration.pre_ring_duration)
-                    ring_callbacks.stop_ring()
+                    ring_callbacks.ring(self.sounds[self.order], configuration.pre_ring_duration)
                     
                     logging.warn(f'Stopped pre-ring')
 
@@ -150,11 +146,10 @@ class Daemon(threading.Thread):
     def instant_ring(self, duration: float, sound = 0):
         try:
             logging.warn(f'Started ring for {duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration} seconds')
-            ring_callbacks.start_ring(sound)
-            time.sleep(duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration)
-            ring_callbacks.stop_ring()
+            ring_callbacks.ring(sound, duration)
 
             logging.warn(f'Stopped ring')
+        
         except:
             logging.critical('Unable to ring manually')
         

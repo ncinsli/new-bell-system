@@ -1,9 +1,3 @@
-from datetime import datetime
-import daemon.daemon as daemon
-import configuration
-import timetable.utils
-import utils
-
 access_denied = '❌ Недостаточно прав'
 greeting = 'Добрый день!'
 
