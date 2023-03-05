@@ -34,6 +34,7 @@ logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler(log_filena
 
 token = os.environ["TOKEN"]
 bot = TeleBot(token)
+bot.parse_mode = 'html'
 
 connection = configuration.connection
 cursor = connection.cursor()
@@ -366,41 +367,38 @@ def set_sound(message):
 @bot.message_handler(commands=["upload_sound"])
 def upload_sound(message):
     if (admins.validator.check(message)):
-        if ' ' not in message.text:
+        if len(message.text.split()) == 1:
             bot.reply_to(message, replies.format_tip.upload_sound)
             return
 
         else:
-            id = message.text.split()[1]
+            name = ' '.join(message.text.split()[1:]).capitalize()
+            bot.register_next_step_handler(message, get_new_sound, name)
+            bot.reply_to(message, f'🎵 Отправьте звуковой файл, которому будет присвоено название "<b>{name}</b>"', parse_mode='HTML')
+            logging.info(f'@{message.from_user.username} requested to upload sound file')
+    else:
+        bot.reply_to(message, replies.results.access_denied)
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.message_handler(commands=["sound"])
+def sound(message):
+    if (admins.validator.check(message)):
+        if len(message.text.split()) == 1:
+            bot.reply_to(message, f'🎵 Отправьте звуковой файл, который будет проигрываться по умолчанию', parse_mode='HTML')
             bot.register_next_step_handler(message, get_new_sound)
             logging.info(f'@{message.from_user.username} requested to upload sound file')
     else:
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
-def get_new_sound(message, id = ''):
-    res = timetable.middleware.upload_sound(bot, message, id)
+def get_new_sound(message, name = 'default'):
+    res = timetable.middleware.upload_sound(bot, message, name)
     bot.reply_to(message, res)
-    logging.info(f'@{message.from_user.username} uploaded sound file')
+    logging.info(f'@{message.from_user.username} uploaded sound file ' + name)
 
 @bot.message_handler(commands=["sounds"])
 def sounds(message):
     bot.reply_to(message, timetable.middleware.get_sounds())
-
-@bot.message_handler(commands=["replace_sound"])
-def replace_sound(message):
-    if (admins.validator.check(message)):
-        if ' ' not in message.text:
-            bot.reply_to(message, replies.format_tip.replace_sound)
-            return
-        
-        id = message.text.split()[1]
-        
-        bot.register_next_step_handler(message, get_new_sound, id)
-        logging.info(f'@{message.from_user.username} requested to replace sound file')
-    else:
-        bot.reply_to(message, replies.results.access_denied)
-        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 print(f"[MAIN] Let's go!")
 daemon.start()

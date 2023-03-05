@@ -45,7 +45,7 @@ def init():
         FromDay TEXT DEFAULT "01.09",
         TillDay TEXT  DEFAULT "31.05",
         muted INTEGER DEFAULT 0,
-        sound INTEGER DEFAULT 0,
+        sound TEXT DEFAULT "default",
         PRIMARY KEY(id AUTOINCREMENT)
     ) 
     """)
@@ -66,7 +66,7 @@ def init():
         day INTEGER NOT NULL,
         time TEXT NOT NULL,
         muted INTEGER DEFAULT 0,
-        sound INTEGER DEFAULT 0,
+        sound TEXT DEFAULT "default",
         PRIMARY KEY(id AUTOINCREMENT)
     ) 
     """)
@@ -500,7 +500,7 @@ def set_sound(bot: TeleBot, message, daemon: Daemon):
         year = int(args[0].split('.')[2])
 
         if ':' not in message.text:
-            res = timetable.sounds.set_sound_day(datetime(year, month, day), int(args[1]))
+            res = timetable.sounds.set_sound_day(datetime(year, month, day), args[1])
             if not res:
                 new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
                 daemon.update(new_timetable, new_sounds)
@@ -519,7 +519,7 @@ def set_sound(bot: TeleBot, message, daemon: Daemon):
         year = datetime.now().year
         
         ring_time = args[0].split(':')
-        order = int(args[1])
+        name = args[1]
 
         ring_h = int(ring_time[0])
         ring_m = int(ring_time[1])
@@ -527,7 +527,7 @@ def set_sound(bot: TeleBot, message, daemon: Daemon):
     if ring_h > 23 or ring_h < 0 or ring_m > 59 or ring_m < 0:
         return "❌ Неверное время" 
 
-    res = timetable.sounds.set_sound(datetime(year, month, day, ring_h, ring_m), order)
+    res = timetable.sounds.set_sound(datetime(year, month, day, ring_h, ring_m), name)
     
     if not res:
         new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
@@ -544,21 +544,28 @@ def get_sounds_last_id():
     else: return -1
 
 def get_sounds():
-    ret = "🎵 Таблица мелодий\n"
 
     sounds = os.listdir(os.path.abspath('sounds'))
+    if len(sounds) == 0:
+        return '🎵 <b>Нет загруженных мелодий</b>'
+    ret = "🎵 Загруженные мелодим\n\n"
     
-    for r in sounds:
-        print(r.split())
-        if len(r.split()) > 1:
-            open_index = r.index('[')
-            close_index = r.index(']')
+    for i in range(0, len(sounds)):
+        sounds[i] = sounds[i][:-4]
 
-            ret += f"{r.split()[0][1:-1]} - {r[close_index + 1:].replace('_', ' ')[:-4]}\n"
+    if 'default' in sounds:
+        ret += f"<b>Мелодия по умолчанию</b>\n"
+        sounds.remove('default')
+    
+    else: ret += f"<b>Нет мелодии по умолчанию</b>\n"
+
+
+    for i in range(0, len(sounds)):
+        ret += f"{i + 1}. {sounds[len(sounds) - i - 1]}\n"
     
     return ret
 
-def upload_sound(bot: TeleBot, message, id = ''):
+def upload_sound(bot: TeleBot, message, name: str):
     if message.content_type == 'document':
         try:
             file_name = message.document.file_name
@@ -579,9 +586,9 @@ def upload_sound(bot: TeleBot, message, id = ''):
             return "❌ Ошибка при получении звукового файла!" 
     
     
-    sound_path = f"./sounds/[{id}] {file_name}"
+    sound_path = f"./sounds/{name.capitalize()}.{file_name[-3:]}"
 
-    if os.path.exists(sound_path):
+    if os.path.exists(sound_path) and name != 'default':
         return "❌ Звуковой файл с таким именем уже существует!"
     else:
         try:

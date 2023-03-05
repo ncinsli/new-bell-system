@@ -89,6 +89,6 @@ def get_state_reply(daemon: daemon.Daemon) -> str:
 
 🕸️ Демон
 Список звонков: {daemon.today_timetable}
-Mute-список: {daemon.sounds}
+Список звонков: {daemon.sounds}
 '''
     return ans

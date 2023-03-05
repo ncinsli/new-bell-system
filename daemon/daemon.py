@@ -75,7 +75,7 @@ class Daemon(threading.Thread):
                 logging.info(f'It is an event: order is now {self.order}')
 
                 if self.sounds[self.order] != -1:
-                    logging.warn(f'Started ring for {configuration.ring_duration} seconds')
+                    logging.warn(f'Started ring for {configuration.ring_duration} seconds | Melody {self.sounds[self.order]}')
                     
                     ring_callbacks.ring(self.sounds[self.order], configuration.ring_duration)
                     logging.warn(f'Stopped ring')

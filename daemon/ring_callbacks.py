@@ -19,18 +19,18 @@ def init():
         load_sound(path)
 
 def load_sound(sound_path: str):
-    sound = AudioSegment.from_file(sound_path, sound_path[-3::])
+    try:
+        sound = AudioSegment.from_file(sound_path, sound_path[-3::])
+        sounds[sound_path.rindex('/') + 1] = sound
+    except:
+        logger.critical("Failed to load sound on path " + sound_path)
 
-    open_index = sound_path.index('[')
-    close_index = sound_path.index(']')
-    sounds[int(sound_path[open_index + 1 : close_index])] = sound
-
-def ring(sound_index: int, duration = configuration.ring_duration):
+def ring(sound: string, duration = configuration.ring_duration):
     os.system(f'echo 1 > /sys/class/gpio/gpio{port}/value')
     time.sleep(0.1) # Для передачи системе оповещения тока, который скажет ей включить линейный вход, нужно время
 
     try:
-        playback.play(sounds[sound_index][0:duration * 1000])
+        playback.play(sounds[sound][0:duration * 1000])
         stop_ring()
 
     except Exception as e:
