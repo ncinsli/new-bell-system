@@ -21,7 +21,7 @@ def init():
 def load_sound(sound_path: str):
     try:
         sound = AudioSegment.from_file(sound_path, sound_path[-3::])
-        sounds[sound_path.rindex('/') + 1] = sound
+        sounds[sound_path[(sound_path.rindex('/')+1):-4]] = sound # убирает полный путь и расширение. Итого: просто название песни
     except:
         logger.critical("Failed to load sound on path " + sound_path)
 
