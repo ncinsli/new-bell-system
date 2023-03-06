@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 
 days = {0: u"Понедельник", 1: u"Вторник", 2: u"Среда", 3: u"Четверг", 4: u"Пятница", 5: u"Суббота", 6: u"Воскресенье"}
 
@@ -49,3 +50,6 @@ def sub_times(initial_time: str, seconds: int):
         hours -= 1
 
     return f'{str(hours).zfill(2)}:{str(minutes).zfill(2)}'.zfill(5)
+
+def get_sound_file_list():
+    return [i[:-4] for i in os.listdir('sounds')]

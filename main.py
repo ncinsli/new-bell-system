@@ -360,6 +360,22 @@ def set_sound(message):
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
+@bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/upload_sound' and call.message)
+def upload_sound_callback(call):
+    bot.reply_to(call.message, f'🎵 Отправьте звуковой файл', parse_mode='HTML')
+    bot.register_next_step_handler(call.message, upload_sound_callback_name)
+    logging.info(f'@{call.message.from_user.username} requested to upload sound file')
+
+def upload_sound_callback_name(message):
+    bot.reply_to(message, 'Укажите, как называть аудиозапись')
+
+    bot.register_next_step_handler(message, upload_sound_callback_file, message)
+
+def upload_sound_callback_file(message, file):
+    res = timetable.middleware.upload_sound(bot, file, message.text)
+    bot.reply_to(message, res)
+    logging.info(f'@{message.from_user.username} uploaded sound file ' + message.text)
+
 @bot.message_handler(commands=["upload_sound"])
 def upload_sound(message):
     if (admins.validator.check(message)):
@@ -376,13 +392,14 @@ def upload_sound(message):
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
+@bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/upload_default_sound' and call.message)
+def upload_default_sound_callback(call):
+    bot.reply_to(call.message, f'🎵 Отправьте звуковой файл, который будет проигрываться по умолчанию', parse_mode='HTML')
+    bot.register_next_step_handler(call.message, get_new_sound)
+    logging.info(f'@{call.message.from_user.username} requested to upload sound file')
 
-@bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/sound' and call.message)
-def sound_callback(call):
-    sound(call.message)
-
-@bot.message_handler(commands=["sound"])
-def sound(message):
+@bot.message_handler(commands=["upload_default_sound"])
+def upload_default_sound(message):
     if (admins.validator.check(message)):
         if len(message.text.split()) == 1:
             bot.reply_to(message, f'🎵 Отправьте звуковой файл, который будет проигрываться по умолчанию', parse_mode='HTML')
@@ -399,8 +416,13 @@ def get_new_sound(message, name = 'default'):
 
 @bot.message_handler(commands=["sounds"])
 def sounds(message):
-    set_default = types.InlineKeyboardButton(text="Установить звонок по умолчанию", callback_data=f"/sound")
-    bot.send_message(message.from_user.id, timetable.middleware.get_sounds(), reply_markup=types.InlineKeyboardMarkup().row(set_default))
+    set_default = types.InlineKeyboardButton(text="Установить мелодию по умолчанию", callback_data=f"/upload_default_sound")
+    upload_new = types.InlineKeyboardButton(text="Добавить мелодию в базу", callback_data=f"/upload_sound")
+    bot.send_message(message.from_user.id, timetable.middleware.get_sounds(), reply_markup=types.InlineKeyboardMarkup().add(set_default).add(upload_new))
+
+@bot.message_handler(commands=["dbg"])
+def debug_info(message):
+    bot.send_message(message.from_user.id, utils.get_debug_info(daemon))
 
 print(f"[MAIN] Let's go!")
 daemon.start()
@@ -410,7 +432,7 @@ def thread_exception_handler(args):
     
     traceback_catched = traceback.format_exc()
     for id in configuration.debug_info_receivers: 
-        daemon.debugger.send_message(id, '🔥  Критическая ошибка демон-процесса:\n\n' + f'{args.exc_type.__name__}\n\n{traceback_catched}')
+        daemon.debugger.send_message(id, '🔥 Критическая ошибка демон-процесса:\n\n' + f'{args.exc_type.__name__}\n\n{traceback_catched}')
 
 daemon.excepthook = thread_exception_handler
 

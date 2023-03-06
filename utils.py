@@ -86,9 +86,12 @@ def get_state_reply(daemon: daemon.Daemon) -> str:
 Аптайм: {get_uptime()}
 Температура: {get_cpu_temp()}°С
 Статус: {configuration.status}
-
-🕸️ Демон
-Список звонков: {daemon.today_timetable}
-Список звонков: {daemon.sounds}
 '''
     return ans
+
+def get_debug_info(daemon: daemon.Daemon):
+    return f"""
+🕸️ Демон
+Список звонков: {daemon.today_timetable}
+
+Список звуков: {daemon.sounds}"""

@@ -493,14 +493,22 @@ def pop(bot: TeleBot, message, daemon: Daemon):
 
 def set_sound(bot: TeleBot, message, daemon: Daemon):
     args = message.text.split()[1:]
+    sound_files = utils.get_sound_file_list()
+    print(sound_files)
 
     if '.' in message.text:
         day = int(args[0].split('.')[0])
         month = int(args[0].split('.')[1])
         year = int(args[0].split('.')[2])
-
+        
         if ':' not in message.text:
-            res = timetable.sounds.set_sound_day(datetime(year, month, day), args[1])
+            name = ' '.join(args[1:]).strip()
+
+            if name not in sound_files: 
+                return f"❌ Мелодия не добавлена на звонок, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound {name}</code> "
+
+            res = timetable.sounds.set_sound_day(datetime(year, month, day), name)
+            
             if not res:
                 new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
                 daemon.update(new_timetable, new_sounds)
@@ -508,8 +516,11 @@ def set_sound(bot: TeleBot, message, daemon: Daemon):
             return "✅ Мелодия добавлена на звонок" if not res else "❌ Мелодия не добавлена на звонок"
 
         ring_time = args[1].split(':')
-        order = int(args[2])
+        name = ' '.join(args[2:]).strip()
 
+        if name not in sound_files: 
+            return f"❌ Мелодия не добавлена на звонок, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound {name}</code> "
+        
         ring_h = int(ring_time[0])
         ring_m = int(ring_time[1])
 
@@ -517,9 +528,26 @@ def set_sound(bot: TeleBot, message, daemon: Daemon):
         day = datetime.now().day
         month = datetime.now().month
         year = datetime.now().year
-        
+
+        if ':' not in message.text:
+            name = ' '.join(args[0:]).strip()
+
+            if name not in sound_files: 
+                return f"❌ Мелодия не добавлена на звонок, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound {name}</code> "
+
+            res = timetable.sounds.set_sound_day(datetime(year, month, day), name)
+            if not res:
+                new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
+                daemon.update(new_timetable, new_sounds)
+
+            return "✅ Мелодия добавлена на звонок" if not res else "❌ Мелодия не добавлена на звонок"
+
+        name = ' '.join(args[1:]).strip()
+
+        if name not in sound_files: 
+            return f"❌ Мелодия не добавлена на звонок, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound {name}</code> "
+
         ring_time = args[0].split(':')
-        name = args[1]
 
         ring_h = int(ring_time[0])
         ring_m = int(ring_time[1])
@@ -548,14 +576,14 @@ def get_sounds():
     sounds = os.listdir(os.path.abspath('sounds'))
     if len(sounds) == 0:
         return '🎵 <b>Нет загруженных мелодий</b>'
-    ret = "🎵 Загруженные мелодим\n\n"
+    ret = "🎵 <b>Загруженные мелодии</b>\n\n"
     
     for i in range(0, len(sounds)):
         sounds[i] = sounds[i][:-4]
 
-    if 'default' in sounds:
+    if 'Default' in sounds:
         ret += f"<b>Мелодия по умолчанию</b>\n"
-        sounds.remove('default')
+        sounds.remove('Default')
     
     else: ret += f"<b>Нет мелодии по умолчанию</b>\n"
 

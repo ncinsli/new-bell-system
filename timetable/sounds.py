@@ -19,7 +19,7 @@ connection = configuration.connection
 
 def set_sound(date_time: datetime, name: str):
     cursor = connection.cursor()
-
+    
     time_str = str(date_time.time())[:5].zfill(5)
     timetable_today = timetable.getting.get_time(date_time)[0]
 
@@ -29,7 +29,6 @@ def set_sound(date_time: datetime, name: str):
     AND month={date_time.month}
     AND year={date_time.year}
     """)
-
     overrides = cursor.fetchall()
 
     connection.commit()
