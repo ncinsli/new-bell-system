@@ -228,34 +228,30 @@ def get_timetable(message):
     timetable.middleware.get_time(bot, message)
     logging.info(f'@{message.from_user.username} requested timetable')
 
-@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/get_timetable' and call.message)
 def get_timetable_callbacks(call):
-    if call.message:
-        call_data = call.data.split()
-        if call_data[0] == '/get_timetable':
-        
-            call_data = call.data.split()
-          
-            dmy = call_data[1].split('.')
-            day, month, year = int(dmy[0]), int(dmy[1]), int(dmy[2])
-            date = datetime(year, month, day)
-          
-            bot.parse_mode = 'HTML'
-          
-            to_out = timetable.middleware.get_time_raw(date)
-          
-            prev_day = date - timedelta(days=1)
-            dmy_prev = f'{prev_day.day}.{prev_day.month}.{prev_day.year}'
-          
-            next_day = date + timedelta(days=1)
-            dmy_next = f'{next_day.day}.{next_day.month}.{next_day.year}'
-          
-            go_left_button = types.InlineKeyboardButton(text="<", callback_data=f"/get_timetable {dmy_prev}")
-            go_right_button = types.InlineKeyboardButton(text=">", callback_data=f"/get_timetable {dmy_next}")
-          
-            bot.edit_message_text(f"""
-            🗓 Расписание на <b>{timetable.utils.get_weekday_russian(date)}, {date.day}</b>:\n\n{to_out}
-            """, call.message.chat.id, call.message.message_id, reply_markup=types.InlineKeyboardMarkup().row(go_left_button, go_right_button))
+    call_data = call.data.split()
+    
+    dmy = call_data[1].split('.')
+    day, month, year = int(dmy[0]), int(dmy[1]), int(dmy[2])
+    date = datetime(year, month, day)
+    
+    bot.parse_mode = 'HTML'
+    
+    to_out = timetable.middleware.get_time_raw(date)
+    
+    prev_day = date - timedelta(days=1)
+    dmy_prev = f'{prev_day.day}.{prev_day.month}.{prev_day.year}'
+    
+    next_day = date + timedelta(days=1)
+    dmy_next = f'{next_day.day}.{next_day.month}.{next_day.year}'
+    
+    go_left_button = types.InlineKeyboardButton(text="<", callback_data=f"/get_timetable {dmy_prev}")
+    go_right_button = types.InlineKeyboardButton(text=">", callback_data=f"/get_timetable {dmy_next}")
+    
+    bot.edit_message_text(f"""
+    🗓 Расписание на <b>{timetable.utils.get_weekday_russian(date)}, {date.day}</b>:\n\n{to_out}
+    """, call.message.chat.id, call.message.message_id, reply_markup=types.InlineKeyboardMarkup().row(go_left_button, go_right_button))
 
 @bot.message_handler(commands=["set_timetable"])
 def set_timetable(message):
@@ -331,7 +327,7 @@ def push(message):
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 @bot.message_handler(commands=["pop"])
-def push(message):
+def pop(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.pop)
@@ -380,6 +376,11 @@ def upload_sound(message):
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
+
+@bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/sound' and call.message)
+def sound_callback(call):
+    sound(call.message)
+
 @bot.message_handler(commands=["sound"])
 def sound(message):
     if (admins.validator.check(message)):
@@ -398,7 +399,8 @@ def get_new_sound(message, name = 'default'):
 
 @bot.message_handler(commands=["sounds"])
 def sounds(message):
-    bot.reply_to(message, timetable.middleware.get_sounds())
+    set_default = types.InlineKeyboardButton(text="Установить звонок по умолчанию", callback_data=f"/sound")
+    bot.send_message(message.from_user.id, timetable.middleware.get_sounds(), reply_markup=types.InlineKeyboardMarkup().row(set_default))
 
 print(f"[MAIN] Let's go!")
 daemon.start()
