@@ -30,7 +30,10 @@ def ring(sound: string, duration = configuration.ring_duration):
     time.sleep(0.1) # Для передачи системе оповещения тока, который скажет ей включить линейный вход, нужно время
 
     try:
-        playback.play(sounds[sound][0:duration * 1000])
+        if sound != None: 
+            playback.play(sounds[sound][0:duration * 1000])
+        else:
+            time.sleep(duration)
         stop_ring()
 
     except Exception as e:

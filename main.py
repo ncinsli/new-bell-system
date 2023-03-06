@@ -111,15 +111,14 @@ def admin_rm(message):
 def ring(message):
     if admins.validator.check(message):
         duration = configuration.ring_duration
-        sound = 0
-
+        sound = None # Если звук не предоставлен
         try:
-            args = message.text.split()[1:]
-            if len(args) > 0: 
-                duration = float(args[0])
-            if len(args) > 1:
-                sound = float(args[1])
-
+            space_count = message.text.count(" ")
+            if space_count > 0:
+                duration = float(message.text.split(" ")[1])
+            if space_count > 1:
+                message_splitted = message.text.split(" ")
+                sound = " ".join(message_splitted[2:])
         except: 
             bot.reply_to(message, replies.format_tip.ring)
             return
