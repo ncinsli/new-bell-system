@@ -61,7 +61,7 @@ try:
         lcd.crlf()
         lcd.write_string('    Version: 1.2')
         lcd.crlf()
-        lcd.write_string(' Last update: 06.03')
+        lcd.write_string(' Last update: 07.03')
         lcd.crlf()
         lcd.write_string('        2023')
         lcd.crlf()

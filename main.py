@@ -112,13 +112,19 @@ def ring(message):
     if admins.validator.check(message):
         duration = configuration.ring_duration
         sound = None # Если звук не предоставлен
+        no_duration_state = False # для обработки логики аргументов
         try:
             space_count = message.text.count(" ")
+            args = message.text.split(" ")
             if space_count > 0:
-                duration = float(message.text.split(" ")[1])
+                try:
+                    duration = float(args[1])
+                except:
+                    sound = " ".join(args[1:])
+                    no_duration_state = True
             if space_count > 1:
-                message_splitted = message.text.split(" ")
-                sound = " ".join(message_splitted[2:])
+                if not no_duration_state:
+                    sound = " ".join(args[2:])
         except: 
             bot.reply_to(message, replies.format_tip.ring)
             return
@@ -371,9 +377,13 @@ def upload_sound_callback_name(message):
     bot.register_next_step_handler(message, upload_sound_callback_file, message)
 
 def upload_sound_callback_file(message, file):
-    res = timetable.middleware.upload_sound(bot, file, message.text)
-    bot.reply_to(message, res)
-    logging.info(f'@{message.from_user.username} uploaded sound file ' + message.text)
+    try:
+        float(message.text)
+        bot.reply_to(message, "Недопустимое название аудиозаписи!")
+    except:
+        res = timetable.middleware.upload_sound(bot, file, message.text)
+        bot.reply_to(message, res)
+        logging.info(f'@{message.from_user.username} uploaded sound file ' + message.text)
 
 @bot.message_handler(commands=["upload_sound"])
 def upload_sound(message):
