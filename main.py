@@ -111,8 +111,9 @@ def admin_rm(message):
 def ring(message):
     if admins.validator.check(message):
         duration = configuration.ring_duration
-        sound = None # Если звук не предоставлен
+        sound = 'Default' # Если звук не предоставлен
         no_duration_state = False # для обработки логики аргументов
+
         try:
             space_count = message.text.count(" ")
             args = message.text.split(" ")
@@ -120,21 +121,29 @@ def ring(message):
                 try:
                     duration = float(args[1])
                 except:
-                    sound = " ".join(args[1:])
+                    sound = " ".join(args[1:]).capitalize()
                     no_duration_state = True
             if space_count > 1:
                 if not no_duration_state:
-                    sound = " ".join(args[2:])
+                    sound = " ".join(args[2:]).capitalize()
         except: 
             bot.reply_to(message, replies.format_tip.ring)
             return
         
-        daemon.instant_ring(duration, sound)
+        sound_files = timetable.utils.get_sound_file_list()
+        if sound not in sound_files and sound != 'Default':
+            bot.reply_to(message, f"❌ Мелодия не прозвенит, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound</code> ")
+            return
         
+        daemon.instant_ring(duration, sound)
+
         try:
             duration = '' if duration == configuration.ring_duration else (" длиной в " + str(duration) + " секунд")
             for id in configuration.debug_info_receivers:
                 daemon.debugger.send_message(id, f'🛎️  Ручной звонок{duration} подан пользователем @{str(message.from_user.username).lower()}')
+            
+            melody = ("\nМелодия: " + sound) if sound != "Default" else ""
+            daemon.debugger.send_message(message.from_user.id, f'🛎️  Подан ручной звонок{duration} {melody}')
 
         except: logging.getLogger().error('Unable to notify debug info receivers about manual ring')
 
@@ -149,11 +158,18 @@ def resize(message):
             bot.reply_to(message, replies.format_tip.resize)
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: invalid format')
         else:
-            timetable.middleware.resize(bot, message, daemon)
+            res = timetable.middleware.resize(message, daemon)
+            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always resize")    
+
+            bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
             logging.info(f'@{message.from_user.username} resized timetable ({message.text})')
     else:
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.callback_query_handler(lambda arg: arg == '/set_always resize')
+def resize_set_weekly(message):
+    pass
 
 @bot.message_handler(commands=["mute"])
 def mute(message):
@@ -163,20 +179,34 @@ def mute(message):
             bot.reply_to(message, replies.format_tip.mute)
         else:
             logging.info(f'@{message.from_user.username} muted timetable ({message.text})')
-            timetable.middleware.mute(bot, message, daemon)
+            res = timetable.middleware.mute(message, daemon)
 
+            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always mute")    
+            bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
+
+@bot.callback_query_handler(lambda arg: arg == '/set_always mute')
+def mute_set_weekly(message):
+    pass
 
 @bot.message_handler(commands=["mute_all"])
 def mute_all(message):
     if (admins.validator.check(message)):
-        timetable.middleware.mute_all(bot, message, daemon)
+        res = timetable.middleware.mute_all(message, daemon)
+        
+        set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always mute_all")    
+        bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+
         logging.info(f'@{message.from_user.username} muted all day ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
+
+@bot.callback_query_handler(lambda arg: arg == '/set_always mute_all')
+def mute_all_set_weekly(message):
+    pass
 
 @bot.message_handler(commands=["unmute"])
 def unmute(message):
@@ -184,22 +214,37 @@ def unmute(message):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.unmute)
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: incorrect format')
-
         else:
-            timetable.middleware.unmute(bot, message, daemon)
+            res = timetable.middleware.unmute(bot, message, daemon)
+            
+            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always unmute")    
+            bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+
             logging.info(f'@{message.from_user.username} muted timetable ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
 
+@bot.callback_query_handler(lambda arg: arg == '/set_always unmute')
+def unmute_set_weekly(message):
+    pass
+
 @bot.message_handler(commands=["unmute_all"])
 def unmute_all(message):
-    if (admins.validator.check(message)):
-        timetable.middleware.unmute_all(bot, message, daemon)
+    if (admins.validator.check(message)): 
+        res = timetable.middleware.unmute_all(bot, message, daemon)
+        
+        set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always unmute_all")    
+        bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+
         logging.info(f'@{message.from_user.username} unmuted all day ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
+
+@bot.callback_query_handler(lambda arg: arg == '/set_always unmute')
+def unmute_all_set_weekly(message):
+    pass
 
 @bot.message_handler(commands=["shift"])
 def shift(message):
@@ -208,12 +253,20 @@ def shift(message):
             bot.reply_to(message, replies.format_tip.shift)
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: incorrect format')
         else:
-            timetable.middleware.shift(bot, message, daemon)
+            res = timetable.middleware.shift(message, daemon)
+            
+            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always shift")    
+            bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+
             logging.info(f'@{message.from_user.username} shifted timetable ({message.text})')
 
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
+
+@bot.callback_query_handler(lambda arg: arg == '/set_always unmute')
+def shift_set_weekly(message):
+    pass
 
 @bot.message_handler(commands=["pre_ring_edit"])
 def pre_ring_edit(message):
@@ -222,7 +275,8 @@ def pre_ring_edit(message):
             bot.reply_to(message, replies.format_tip.pre_ring_edit)
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: incorrect format')
         else:
-            timetable.middleware.pre_ring_edit(bot, message)
+            res = timetable.middleware.pre_ring_edit(message)
+
             logging.info(f'@{message.from_user.username} edited pre-ring interval ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
@@ -273,7 +327,6 @@ def get_new_timetable(message):
     bot.reply_to(message, returnedMessage)
     logging.info(f'@{message.from_user.username} changed default timetable')
 
-
 @bot.message_handler(commands=["about"])
 def about(message):
     bot.send_message(message.chat.id, replies.results.about)
@@ -282,15 +335,22 @@ def about(message):
 def lesson_duration(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text or message.text.split()[1].isnumeric():
-            bot.reply_to(message, replies.lesson_duration)
+            bot.reply_to(message, replies.format_tip.lesson_duration)
         else:
-            timetable.middleware.events_duration(bot, EventType.LESSON, message, daemon)
-            bot.reply_to(message, replies.results.lessonduration_ok)
+            timetable.middleware.events_duration(EventType.LESSON, message, daemon)
+            
+            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always lesson_duration")    
+            bot.send_message(message.from_user.id, replies.results.lessonduration_ok, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+         
             logging.info(f'@{str(message.from_user.username).lower()} changed lessons duration ({message.text})')
 
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.callback_query_handler(lambda arg: arg == '/set_always lesson_duration')
+def lesson_duration_set_weekly(message):
+    pass
 
 @bot.message_handler(commands=["break_duration"])
 def break_duration(message):
@@ -298,12 +358,19 @@ def break_duration(message):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.break_duration)
         else:
-            timetable.middleware.events_duration(bot, EventType.BREAK, message, daemon)
-            bot.reply_to(message, replies.results.breakduration_ok)
+            timetable.middleware.events_duration(EventType.BREAK, message, daemon)
+        
+            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always break_duration")    
+            bot.send_message(message.from_user.id, replies.results.breakduration_ok, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+         
             logging.info(f'@{str(message.from_user.username).lower()} changed breaks duration ({message.text})')
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.callback_query_handler(lambda arg: arg == '/set_always break_duration')
+def break_duration_set_weekly(message):
+    pass
 
 @bot.message_handler(commands=["add_receiver"])
 def add_receiver(message):
@@ -312,7 +379,7 @@ def add_receiver(message):
             bot.reply_to(message, replies.format_tip.add_receiver)
         else:
             configuration.debug_info_receivers.add(message.text.split()[1])
-            bot.reply_to(message, replies.results.addreceiver_ok)
+            bot.send_message(message.from_user.id, replies.results.addreceiver_ok)
             logging.info(f'@{str(message.from_user.username).lower()} added debug updated receiver ({message.text})')
     else:
         bot.reply_to(message, replies.results.access_denied)    
@@ -324,12 +391,20 @@ def push(message):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.push)
         else:
-            result = timetable.middleware.push(bot, message, daemon)
-            bot.reply_to(message, result)
+            result = timetable.middleware.push(message, daemon)
+            bot.send_message(message.from_user.id, result)
+                    
+            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always push")    
+            bot.send_message(message.from_user.id, result, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+         
             logging.info(f'@{str(message.from_user.username).lower()} added new ring ({message.text})')
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.callback_query_handler(lambda arg: arg == '/set_always push')
+def push_set_weekly(message):
+    pass
 
 @bot.message_handler(commands=["pop"])
 def pop(message):
@@ -337,12 +412,19 @@ def pop(message):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.pop)
         else:
-            result = timetable.middleware.pop(bot, message, daemon)
-            bot.reply_to(message, result)
+            result = timetable.middleware.pop(message, daemon)
+                        
+            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always pop")    
+            bot.send_message(message.from_user.id, result, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+         
             logging.info(f'@{str(message.from_user.username).lower()} removed new ring ({message.text})' if not result else f'@{str(message.from_user.username).lower()} failed to remove new ring ({message.text}): no such')
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.callback_query_handler(lambda arg: arg == '/set_always pop')
+def pop_set_weekly(message):
+    pass
 
 @bot.message_handler(commands=["get_timetable_json"])
 def get_timetable_json(message):
@@ -358,12 +440,19 @@ def set_sound(message):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.set_sound)
         else:
-            result = timetable.middleware.set_sound(bot, message, daemon)
-            bot.reply_to(message, result)
+            result = timetable.middleware.set_sound(message, daemon)
+                        
+            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always set_sound")    
+            bot.send_message(message.from_user.id, result, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+         
             logging.info(f'@{str(message.from_user.username).lower()} set new sound ({message.text})')
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.callback_query_handler(lambda arg: arg == '/set_always set_sound')
+def set_sound_weekly(message):
+    pass
 
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/upload_sound' and call.message)
 def upload_sound_callback(call):

@@ -228,7 +228,7 @@ def absolute_table_handler(table):
 
     return "✅ Расписание успешно перезаписано"
 
-def resize(bot: TeleBot, message, daemon: Daemon):
+def resize(message, daemon: Daemon):
     args = message.text.split()[1:]
 
     day = datetime.now().day
@@ -259,12 +259,12 @@ def resize(bot: TeleBot, message, daemon: Daemon):
     if event_type == 'break':
         timetable.resizing.resize(date, EventType.BREAK, order * 2 + 1, in_seconds)
 
-    bot.reply_to(message, f"{'Урок' if event_type == 'lesson' else 'Перемена'} № {order} теперь {'длиннее' if in_seconds > 0 else 'короче'} на {abs(in_seconds) // 60} минут(ы)")
-    
     new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_sounds)
 
-def shift(bot: TeleBot, message, daemon: Daemon):
+    return f"{'Урок' if event_type == 'lesson' else 'Перемена'} № {order} теперь {'длиннее' if in_seconds > 0 else 'короче'} на {abs(in_seconds) // 60} минут(ы)"
+
+def shift(message, daemon: Daemon):
     args = message.text.split()[1:]
 
     day = datetime.now().day
@@ -289,14 +289,13 @@ def shift(bot: TeleBot, message, daemon: Daemon):
 
     timetable.shifting.shift(datetime(year, month, day), in_seconds // 60)
 
-    bot.reply_to(message, f'Расписание на {utils.get_weekday_russian(datetime(year, month, day))}, {str(day).zfill(2)} {str(month).zfill(2)}, {year} сдвинуто на {in_seconds // 60} мин')
-
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
 
+    return f'Расписание на {utils.get_weekday_russian(datetime(year, month, day))}, {str(day).zfill(2)} {str(month).zfill(2)}, {year} сдвинуто на {in_seconds // 60} мин'
 
 # /mute dd.mm.yyyy hh:mm
-def mute(bot: TeleBot, message, daemon: Daemon):
+def mute(message, daemon: Daemon):
     args = message.text.split()[1:]
     
     day = datetime.now().day
@@ -315,13 +314,14 @@ def mute(bot: TeleBot, message, daemon: Daemon):
 
     # Сериализация
     timetable.muting.mute(datetime(year, month, day, hour, minutes))
-    bot.reply_to(message, f'Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {str(day).zfill(2)}.{str(month).zfill(2)}.{year} не будет включён')
 
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
 
+    return f'Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {str(day).zfill(2)}.{str(month).zfill(2)}.{year} не будет включён'
+
 # /mute dd.mm.yyyy hh:mm
-def mute_all(bot: TeleBot, message, daemon: Daemon):
+def mute_all(message, daemon: Daemon):
     args = message.text.split()[1:]
 
     day = datetime.now().day
@@ -335,12 +335,13 @@ def mute_all(bot: TeleBot, message, daemon: Daemon):
 
     # Сериализация
     timetable.muting.mute_all(datetime(year, month, day))
-    bot.reply_to(message, f'Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут заглушены')
 
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
 
-def unmute(bot: TeleBot, message, daemon: Daemon):
+    return f'Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут заглушены'
+
+def unmute(message, daemon: Daemon):
     args = message.text.split()[1:]
 
     day = datetime.now().day
@@ -359,13 +360,14 @@ def unmute(bot: TeleBot, message, daemon: Daemon):
 
     # Сериализация
     timetable.muting.unmute(datetime(year, month, day, hour, minutes))
-    bot.reply_to(message, f'Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {day}.{month}.{year} будет включён')
 
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
+    
+    return f'Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {day}.{month}.{year} будет включён'
 
 # /mute dd.mm.yyyy hh:mm
-def unmute_all(bot: TeleBot, message, daemon: Daemon):
+def unmute_all(message, daemon: Daemon):
     args = message.text.split()[1:]
 
     day = datetime.now().day
@@ -379,22 +381,22 @@ def unmute_all(bot: TeleBot, message, daemon: Daemon):
 
     # Сериализация
     timetable.muting.unmute_all(datetime(year, month, day))
-    bot.reply_to(message, f'Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут включены')
 
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
 
+    return f'Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут включены'
 
-def pre_ring_edit(bot: TeleBot, message):
+def pre_ring_edit(message):
     args = message.text.split()[1:]
     delta_min = int(args[0])
 
     if delta_min <= 0: return
     
     configuration.pre_ring_delta = delta_min * 60
-    bot.reply_to(message, f'Интервал изменён на {delta_min} минут')
+    return f'Интервал изменён на {delta_min} минут'
 
-def events_duration(bot: TeleBot, affected_events: EventType, message, daemon: Daemon):
+def events_duration(affected_events: EventType, message, daemon: Daemon):
     args = message.text.split()[1:]
 
     day = datetime.now().day
@@ -422,7 +424,7 @@ def events_duration(bot: TeleBot, affected_events: EventType, message, daemon: D
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
 
-def push(bot: TeleBot, message, daemon: Daemon):
+def push(message, daemon: Daemon):
     args = message.text.split()[1:]
 
     if '.' in message.text:
@@ -456,7 +458,7 @@ def push(bot: TeleBot, message, daemon: Daemon):
 
     return "✅ Звонок добавлен" if not res else "❌ Такой звонок уже есть"
 
-def pop(bot: TeleBot, message, daemon: Daemon):
+def pop(message, daemon: Daemon):
     args = message.text.split()[1:]
 
     if '.' in message.text:
@@ -491,7 +493,7 @@ def pop(bot: TeleBot, message, daemon: Daemon):
     return "✅ Звонок удалён" if not res else "❌ Такого звонка не было"
 
 
-def set_sound(bot: TeleBot, message, daemon: Daemon):
+def set_sound(message, daemon: Daemon):
     args = message.text.split()[1:]
     sound_files = utils.get_sound_file_list()
     print(sound_files)
