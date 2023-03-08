@@ -21,6 +21,7 @@ import timetable.removing
 import timetable.setting
 import timetable.overrides
 import timetable.sounds
+import timetable.weekly
 import timetable.timetable_defaultvalues as setup
 import configuration
 
@@ -34,7 +35,7 @@ def init():
     cursor.execute(f"""
     CREATE TABLE IF NOT EXISTS {table} (
         id INTEGER,
-        time TEXT NOT NULL,
+        time TEXT NOT NULL UNIQUE,
         OnMonday INTEGER DEFAULT 0,
         OnTuesday INTEGER DEFAULT 0,
         OnWednesday INTEGER DEFAULT 0,
@@ -632,3 +633,11 @@ def upload_sound(bot: TeleBot, message, name: str):
             return "❌ Ошибка при чтении звукового файла!"
         
     return "✅ Звуковой файл успешно записан"
+
+def weekly(message):
+    table, sounds = timetable.getting.get_time(datetime.now())
+
+    print(sounds)
+    timetable.weekly.set_weekly(table, sounds)
+
+    return 'Ок'

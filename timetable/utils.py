@@ -53,3 +53,8 @@ def sub_times(initial_time: str, seconds: int):
 
 def get_sound_file_list():
     return [i[:-4] for i in os.listdir('sounds')]
+
+def format_minutes(minutes: int):
+    hours = minutes // 60
+    minutes = minutes - hours * 60
+    return [hours, minutes]

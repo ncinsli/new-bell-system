@@ -17,3 +17,4 @@ pre_ring_duration = 1
 status = 'Пусто'
 
 default_ring = 0
+display_delay_time = 3

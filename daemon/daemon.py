@@ -1,5 +1,8 @@
-try: import displaying.LCD_2004
+try: 
+    from displaying.LCD_2004 import Display
+    import displaying.LCD_2004
 except: pass
+
 
 import sys
 import logging
@@ -41,7 +44,10 @@ class Daemon(threading.Thread):
         ring_callbacks.init()
         self.update_ring_order()
 
-        try: displaying.LCD_2004.initial_output(self.today_timetable)
+        try: 
+            self.display = Display(table)
+            self.display.start()
+
         except: print("[GPIO] .initial_output")
 
     def update_ring_order(self):

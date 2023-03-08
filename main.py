@@ -21,6 +21,7 @@ import timetable.middleware
 import timetable.getting
 import timetable.setting
 import timetable.muting 
+import timetable.utils
 
 if not os.path.exists('logs'):
     os.system("mkdir logs")
@@ -159,17 +160,12 @@ def resize(message):
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: invalid format')
         else:
             res = timetable.middleware.resize(message, daemon)
-            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always resize")    
 
-            bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+            bot.send_message(message.from_user.id, res)
             logging.info(f'@{message.from_user.username} resized timetable ({message.text})')
     else:
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-
-@bot.callback_query_handler(lambda arg: arg == '/set_always resize')
-def resize_set_weekly(message):
-    pass
 
 @bot.message_handler(commands=["mute"])
 def mute(message):
@@ -180,33 +176,22 @@ def mute(message):
         else:
             logging.info(f'@{message.from_user.username} muted timetable ({message.text})')
             res = timetable.middleware.mute(message, daemon)
-
-            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always mute")    
-            bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+            bot.send_message(message.from_user.id, res)
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
-
-@bot.callback_query_handler(lambda arg: arg == '/set_always mute')
-def mute_set_weekly(message):
-    pass
 
 @bot.message_handler(commands=["mute_all"])
 def mute_all(message):
     if (admins.validator.check(message)):
         res = timetable.middleware.mute_all(message, daemon)
         
-        set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always mute_all")    
-        bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+        bot.send_message(message.from_user.id, res)
 
         logging.info(f'@{message.from_user.username} muted all day ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
-
-@bot.callback_query_handler(lambda arg: arg == '/set_always mute_all')
-def mute_all_set_weekly(message):
-    pass
 
 @bot.message_handler(commands=["unmute"])
 def unmute(message):
@@ -217,34 +202,25 @@ def unmute(message):
         else:
             res = timetable.middleware.unmute(bot, message, daemon)
             
-            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always unmute")    
-            bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+            bot.send_message(message.from_user.id, res)
 
             logging.info(f'@{message.from_user.username} muted timetable ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
 
-@bot.callback_query_handler(lambda arg: arg == '/set_always unmute')
-def unmute_set_weekly(message):
-    pass
 
 @bot.message_handler(commands=["unmute_all"])
 def unmute_all(message):
     if (admins.validator.check(message)): 
         res = timetable.middleware.unmute_all(bot, message, daemon)
         
-        set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always unmute_all")    
-        bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+        bot.send_message(message.from_user.id, res)
 
         logging.info(f'@{message.from_user.username} unmuted all day ({message.text})')
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
-
-@bot.callback_query_handler(lambda arg: arg == '/set_always unmute')
-def unmute_all_set_weekly(message):
-    pass
 
 @bot.message_handler(commands=["shift"])
 def shift(message):
@@ -255,8 +231,7 @@ def shift(message):
         else:
             res = timetable.middleware.shift(message, daemon)
             
-            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always shift")    
-            bot.send_message(message.from_user.id, res, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+            bot.send_message(message.from_user.id, res)
 
             logging.info(f'@{message.from_user.username} shifted timetable ({message.text})')
 
@@ -264,9 +239,6 @@ def shift(message):
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
 
-@bot.callback_query_handler(lambda arg: arg == '/set_always unmute')
-def shift_set_weekly(message):
-    pass
 
 @bot.message_handler(commands=["pre_ring_edit"])
 def pre_ring_edit(message):
@@ -339,18 +311,13 @@ def lesson_duration(message):
         else:
             timetable.middleware.events_duration(EventType.LESSON, message, daemon)
             
-            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always lesson_duration")    
-            bot.send_message(message.from_user.id, replies.results.lessonduration_ok, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+            bot.send_message(message.from_user.id, replies.results.lessonduration_ok)
          
             logging.info(f'@{str(message.from_user.username).lower()} changed lessons duration ({message.text})')
 
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-
-@bot.callback_query_handler(lambda arg: arg == '/set_always lesson_duration')
-def lesson_duration_set_weekly(message):
-    pass
 
 @bot.message_handler(commands=["break_duration"])
 def break_duration(message):
@@ -360,17 +327,13 @@ def break_duration(message):
         else:
             timetable.middleware.events_duration(EventType.BREAK, message, daemon)
         
-            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always break_duration")    
-            bot.send_message(message.from_user.id, replies.results.breakduration_ok, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+            bot.send_message(message.from_user.id, replies.results.breakduration_ok)
          
             logging.info(f'@{str(message.from_user.username).lower()} changed breaks duration ({message.text})')
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
-@bot.callback_query_handler(lambda arg: arg == '/set_always break_duration')
-def break_duration_set_weekly(message):
-    pass
 
 @bot.message_handler(commands=["add_receiver"])
 def add_receiver(message):
@@ -393,18 +356,11 @@ def push(message):
         else:
             result = timetable.middleware.push(message, daemon)
             bot.send_message(message.from_user.id, result)
-                    
-            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always push")    
-            bot.send_message(message.from_user.id, result, reply_markup=types.InlineKeyboardMarkup().row(set_always))
          
             logging.info(f'@{str(message.from_user.username).lower()} added new ring ({message.text})')
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-
-@bot.callback_query_handler(lambda arg: arg == '/set_always push')
-def push_set_weekly(message):
-    pass
 
 @bot.message_handler(commands=["pop"])
 def pop(message):
@@ -414,17 +370,12 @@ def pop(message):
         else:
             result = timetable.middleware.pop(message, daemon)
                         
-            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always pop")    
-            bot.send_message(message.from_user.id, result, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+            bot.send_message(message.from_user.id, result)
          
             logging.info(f'@{str(message.from_user.username).lower()} removed new ring ({message.text})' if not result else f'@{str(message.from_user.username).lower()} failed to remove new ring ({message.text}): no such')
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
-
-@bot.callback_query_handler(lambda arg: arg == '/set_always pop')
-def pop_set_weekly(message):
-    pass
 
 @bot.message_handler(commands=["get_timetable_json"])
 def get_timetable_json(message):
@@ -442,17 +393,13 @@ def set_sound(message):
         else:
             result = timetable.middleware.set_sound(message, daemon)
                         
-            set_always = types.InlineKeyboardButton(text="Установить на каждую неделю", callback_data=f"/set_always set_sound")    
-            bot.send_message(message.from_user.id, result, reply_markup=types.InlineKeyboardMarkup().row(set_always))
+            bot.send_message(message.from_user.id, result)
          
             logging.info(f'@{str(message.from_user.username).lower()} set new sound ({message.text})')
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
-@bot.callback_query_handler(lambda arg: arg == '/set_always set_sound')
-def set_sound_weekly(message):
-    pass
 
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/upload_sound' and call.message)
 def upload_sound_callback(call):
@@ -522,6 +469,31 @@ def sounds(message):
 def debug_info(message):
     bot.send_message(message.from_user.id, utils.get_debug_info(daemon))
 
+@bot.message_handler(commands=["weekly"])
+def weekly_ask(message):
+    if (admins.validator.check(message)):
+        if len(message.text.split()) == 1:
+            yes = types.InlineKeyboardButton(text="Да", callback_data=f"/weekly")
+            
+            bot.send_message(message.from_user.id, f'''
+<b>🗓 Расписание на сегодня</b>:             
+
+{timetable.middleware.get_time_raw(datetime.now())}
+            
+<b>Установить такое расписание 
+на каждый {timetable.utils.get_weekday_russian(datetime.now())}?</b>''', parse_mode='HTML', reply_markup=types.InlineKeyboardMarkup().add(yes))
+
+            logging.info(f'@{message.from_user.username} requested to upload sound file')
+    else:
+        bot.reply_to(message, replies.results.access_denied)
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/weekly' and call.message)
+def weekly(message):
+    res = timetable.middleware.weekly(message)
+    # utils.load_default_timetable(daemon)
+    bot.send_message(message.from_user.id, res)
+
 print(f"[MAIN] Let's go!")
 daemon.start()
 
@@ -536,20 +508,7 @@ daemon.excepthook = thread_exception_handler
 
 if not os.path.exists('database.db'):
     try:
-        with open('timetable.json', 'r') as table_file:
-            table = json.loads(table_file.read())
-        
-            if "format" not in table:
-                pass
-
-            if table["format"] == "shift":
-                returned = timetable.middleware.shift_table_handler(table)
-            elif table["format"] == "absolute":
-                returned = timetable.middleware.absolute_table_handler(table)
-            
-            new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-            daemon.update(new_timetable, new_muted)
-
+        utils.load_default_timetable()
     except:
         logging.info('No .json file, using default configs which may not be precisient')
 

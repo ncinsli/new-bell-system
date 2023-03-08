@@ -3,8 +3,10 @@ import configuration
 import subprocess
 import daemon.daemon as daemon
 import timetable.utils
+import timetable.middleware
 import os
 import logging
+import json
 
 def get_cpu_temp():
     try:
@@ -95,3 +97,18 @@ def get_debug_info(daemon: daemon.Daemon):
 Список звонков: {daemon.today_timetable}
 
 Список звуков: {daemon.sounds}"""
+
+def load_default_timetable(daemon: daemon.Daemon):
+    with open('timetable.json', 'r') as table_file:
+        table = json.loads(table_file.read())
+        
+        if "format" not in table:
+            pass
+
+        if table["format"] == "shift":
+            returned = timetable.middleware.shift_table_handler(table)
+        elif table["format"] == "absolute":
+            returned = timetable.middleware.absolute_table_handler(table)
+        
+        new_timetable, new_muted = timetable.getting.get_time(datetime.now())
+        daemon.update(new_timetable, new_muted)

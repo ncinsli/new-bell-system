@@ -1,42 +1,143 @@
-{"format": "shift",
-  "OnMonday": {
-      "enable": true,
-      "preBellTime": "2m",
-      "firstPreEnabled": true, "allPreEnabled": true,
-      "firstBell": "08:50",
-      "shifts": [35, 5, 45, 10, 45, 20, 45, 20, 45, 10, 45, 10, 45, 10, 45]
-  },
-  "OnTuesday": {
-      "enable": true,
-      "firstPreEnabled": true, "allPreEnabled": true,
-      "firstBell": "09:00",
-      "shifts": [45, 10, 45, 10, 45, 20, 45, 20, 45, 10, 45, 10, 45]
-  },
-  "OnWednesday": {
-      "enable": true,
-      "firstPreEnabled": true, "allPreEnabled": true,
-      "firstBell": "09:00",
-      "shifts": [45, 10, 45, 10, 45, 20, 45, 20, 45, 10, 45, 10, 45]
-  },
-  "OnThursday": {
-      "enable": true,
-      "firstPreEnabled": true, "allPreEnabled": true,
-      "firstBell": "09:00",
-      "shifts": [45, 10, 45, 10, 45, 20, 45, 20, 45, 10, 45, 10, 45]
-  },
-  "OnFriday": {
-      "enable": true,
-      "firstPreEnabled": true, "allPreEnabled": true,
-      "firstBell": "09:00",
-      "shifts": [45, 10, 45, 10, 45, 20, 45, 20, 45, 10, 45, 10, 45]
-  },
-  "OnSaturday": {
-      "enable": true,
-      "firstPreEnabled": true, "allPreEnabled": true,
-      "firstBell": "08:30",
-      "shifts": [45, 10, 45, 10, 45, 20, 45, 20, 45, 10, 45, 5, 45, 0, 45, 5, 45, 25, 45, 5, 45]
-  },
-  "OnSunday": {
-      "enable": false
-  }
+{
+    "format": "shift",
+    "OnMonday": {
+        "enable": true,
+        "preBellTime": "2m",
+        "firstPreEnabled": true,
+        "allPreEnabled": true,
+        "firstBell": "08:50",
+        "shifts": [
+            35,
+            5,
+            45,
+            10,
+            45,
+            20,
+            45,
+            20,
+            45,
+            10,
+            45,
+            10,
+            45,
+            10,
+            45
+        ]
+    },
+    "OnTuesday": {
+        "enable": true,
+        "firstPreEnabled": true,
+        "allPreEnabled": true,
+        "firstBell": "09:00",
+        "shifts": [
+            45,
+            10,
+            45,
+            10,
+            45,
+            20,
+            45,
+            20,
+            45,
+            10,
+            45,
+            10,
+            45
+        ]
+    },
+    "OnWednesday": {
+        "enable": true,
+        "firstPreEnabled": true,
+        "allPreEnabled": true,
+        "firstBell": "09:00",
+        "shifts": [
+            45,
+            10,
+            45,
+            10,
+            45,
+            20,
+            45,
+            20,
+            45,
+            10,
+            45,
+            10,
+            45
+        ]
+    },
+    "OnThursday": {
+        "enable": true,
+        "firstPreEnabled": true,
+        "allPreEnabled": true,
+        "firstBell": "08:59",
+        "shifts": [
+            45,
+            10,
+            61,
+            10,
+            45,
+            20,
+            45,
+            13,
+            45,
+            10,
+            45,
+            10,
+            45
+        ]
+    },
+    "OnFriday": {
+        "enable": true,
+        "firstPreEnabled": true,
+        "allPreEnabled": true,
+        "firstBell": "08:00",
+        "shifts": [
+            45,
+            10,
+            45,
+            10,
+            45,
+            20,
+            45,
+            20,
+            45,
+            10,
+            45,
+            10,
+            45
+        ]
+    },
+    "OnSaturday": {
+        "enable": true,
+        "firstPreEnabled": true,
+        "allPreEnabled": true,
+        "firstBell": "08:30",
+        "shifts": [
+            45,
+            10,
+            45,
+            10,
+            45,
+            20,
+            45,
+            20,
+            45,
+            10,
+            45,
+            5,
+            45,
+            0,
+            45,
+            5,
+            45,
+            25,
+            45,
+            5,
+            45
+        ]
+    },
+    "OnSunday": {
+        "enable": false
+    }
 }
