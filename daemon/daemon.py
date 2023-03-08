@@ -1,6 +1,5 @@
 try: 
     from displaying.LCD_2004 import Display
-    import displaying.LCD_2004
 except: pass
 
 
@@ -58,7 +57,7 @@ class Daemon(threading.Thread):
         self.today_timetable, self.sounds = new_timetable, new_muted # Обращаться к sqlite из другого потока нельзя
         self.today_timetable = list(map(lambda e: e.zfill(5), self.today_timetable))
         
-        try: displaying.LCD_2004.update(self.today_timetable, self.order, self.next_called_timing)
+        try: self.display.update(self.today_timetable, self.order, self.next_called_timing)
         except: print("[GPIO] .update")
         timetable_str = str(self.today_timetable).replace("'", "")
         logging.info(f'Updated timetable: {timetable_str}')
@@ -105,13 +104,13 @@ class Daemon(threading.Thread):
                 if tempIdx != len(self.today_timetable)-1:
                     self.next_called_timing = self.today_timetable[tempIdx+1]
 
-                    try: displaying.LCD_2004.next(self.today_timetable, tempIdx+1)
+                    try: self.display.next(self.today_timetable, tempIdx+1)
                     except: print("[GPIO] .next")
 
                 else:
                     self.next_called_timing = "-1" # no more rings for today
                     
-                    try: displaying.LCD_2004.no_more_rings()
+                    try: self.display.no_more_rings()
                     except: print("[GPIO] .no_more_rings")
 
                     logging.warn(f'No more rings')
@@ -124,7 +123,7 @@ class Daemon(threading.Thread):
 
                 if self.order + 1 <= len(self.today_timetable) - 1:
                     if self.today_timetable[self.order+1] == self.today_timetable[self.order]:
-                        try: displaying.LCD_2004.next(self.today_timetable, self.order+1)
+                        try: self.display.next(self.today_timetable, self.order+1)
                         except: print("[GPIO] .next")
 
             if (timing_forward in self.today_timetable and timing != self.last_called_timing):
