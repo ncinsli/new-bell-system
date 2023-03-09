@@ -1,5 +1,12 @@
-import json
 import os
+
+database_exists = True
+if not os.path.exists("database.db"):
+    print("No database found.")
+    database_exists = False
+
+
+import json
 import sys
 import subprocess
 from telebot import *
@@ -491,7 +498,7 @@ def weekly_ask(message):
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/weekly' and call.message)
 def weekly(message):
     res = timetable.middleware.weekly(message)
-    # utils.load_default_timetable(daemon)
+    utils.load_default_timetable(daemon)
     bot.send_message(message.from_user.id, res)
 
 print(f"[MAIN] Let's go!")
@@ -506,10 +513,11 @@ def thread_exception_handler(args):
 
 daemon.excepthook = thread_exception_handler
 
-if not os.path.exists('database.db'):
+if database_exists == False:
     try:
-        utils.load_default_timetable()
-    except:
+        utils.load_default_timetable(daemon)
+    except Exception as e:
+        print(e)
         logging.info('No .json file, using default configs which may not be precisient')
 
 for owner in configuration.owners:

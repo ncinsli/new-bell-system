@@ -43,8 +43,7 @@ def set_time(items):
                         connection.commit()
                         continue
             else:
-                values = [key.zfill(5), 0, 0, 0, 0, 0, 0, 0]
-
+                values = [key.zfill(5), 0, 0, 0, 0, 0, 0, 0] 
 
         cursor.execute(f"""
             INSERT INTO {table}(time, OnMonday, OnTuesday, OnWednesday, OnThursday, OnFriday, OnSaturday, OnSunday) Values(?, ?, ?, ?, ?, ?, ?, ?)""", values)

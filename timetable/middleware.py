@@ -35,7 +35,7 @@ def init():
     cursor.execute(f"""
     CREATE TABLE IF NOT EXISTS {table} (
         id INTEGER,
-        time TEXT NOT NULL UNIQUE,
+        time TEXT NOT NULL,
         OnMonday INTEGER DEFAULT 0,
         OnTuesday INTEGER DEFAULT 0,
         OnWednesday INTEGER DEFAULT 0,
