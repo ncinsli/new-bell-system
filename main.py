@@ -102,7 +102,7 @@ def list_admin(message):
 @bot.message_handler(commands=["add_admin"])
 def admin_add(message):
     if (admins.validator.check(message)):
-        admins.middleware.add(bot, message)
+        bot.reply_to(message, admins.middleware.add(message))
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
@@ -110,7 +110,7 @@ def admin_add(message):
 @bot.message_handler(commands=["rm_admin"])
 def admin_rm(message):
     if (admins.validator.check(message)):
-        admins.middleware.remove(bot, message)
+        bot.reply_to(message, admins.middleware.remove(message))
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
@@ -147,11 +147,13 @@ def ring(message):
 
         try:
             duration = '' if duration == configuration.ring_duration else (" длиной в " + str(duration) + " секунд")
+            melody = ("\nС мелодией: " + "<b>" + sound + "</b>") if sound != "Default" else ""
+           
             for id in configuration.debug_info_receivers:
-                daemon.debugger.send_message(id, f'🛎️  Ручной звонок{duration} подан пользователем @{str(message.from_user.username).lower()}')
+                daemon.debugger.send_message(id, f'🛎️  Ручной звонок{duration} подан пользователем @{str(message.from_user.username).lower()} {melody}')
             
-            melody = ("\nМелодия: " + sound) if sound != "Default" else ""
-            daemon.debugger.send_message(message.from_user.id, f'🛎️  Подан ручной звонок{duration} {melody}')
+            if message.from_user.id not in configuration.debug_info_receivers:
+                daemon.debugger.send_message(message.from_user.id, f'🛎️  Подан ручной звонок{duration} {melody}', parse_mode='HTML')
 
         except: logging.getLogger().error('Unable to notify debug info receivers about manual ring')
 
@@ -207,7 +209,7 @@ def unmute(message):
             bot.reply_to(message, replies.format_tip.unmute)
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: incorrect format')
         else:
-            res = timetable.middleware.unmute(bot, message, daemon)
+            res = timetable.middleware.unmute(message, daemon)
             
             bot.send_message(message.from_user.id, res)
 
@@ -220,7 +222,7 @@ def unmute(message):
 @bot.message_handler(commands=["unmute_all"])
 def unmute_all(message):
     if (admins.validator.check(message)): 
-        res = timetable.middleware.unmute_all(bot, message, daemon)
+        res = timetable.middleware.unmute_all(message, daemon)
         
         bot.send_message(message.from_user.id, res)
 
@@ -488,7 +490,7 @@ def weekly_ask(message):
 {timetable.middleware.get_time_raw(datetime.now())}
             
 <b>Установить такое расписание 
-на каждый {timetable.utils.get_weekday_russian(datetime.now())}?</b>''', parse_mode='HTML', reply_markup=types.InlineKeyboardMarkup().add(yes))
+на каждый день недели ({timetable.utils.get_weekday_russian(datetime.now())}) ?</b>''', parse_mode='HTML', reply_markup=types.InlineKeyboardMarkup().add(yes))
 
             logging.info(f'@{message.from_user.username} requested to upload sound file')
     else:

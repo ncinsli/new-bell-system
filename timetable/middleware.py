@@ -1,31 +1,28 @@
-#TODO: Каталог ошибок, кодовых номеров и соответствующих строк
-INCORRECT_FORMAT_ERROR = "❌ Ошибка при чтении файла. Неверный формат"
-
-import sqlite3
-from datetime import datetime, timedelta
+from telebot import types
 from telebot import TeleBot
-import timetable.muting as timetable
+from daemon.daemon import Daemon
+from datetime import datetime, timedelta
+
 import json
 import daemon.ring_callbacks
 import timetable.resizing
 import os
-import sys
-from timetable.events import EventType
-from daemon.daemon import Daemon
-from telebot import types
-import timetable.utils as utils
-import timetable.muting
-import timetable.getting
-import timetable.adding
-import timetable.removing
-import timetable.setting
-import timetable.overrides
-import timetable.sounds
 import timetable.weekly
+import timetable.muting
+import timetable.adding
+import timetable.sounds
+import timetable.muting
+import timetable.setting
+import timetable.getting
+import timetable.removing
+import timetable.overrides
+import timetable.utils as utils
+from timetable.events import EventType
 import timetable.timetable_defaultvalues as setup
 import configuration
 
 
+INCORRECT_FORMAT_ERROR = "❌ Ошибка при чтении файла. Неверный формат"
 connection = configuration.connection
 cursor = connection.cursor()
 table = configuration.time_table_name
@@ -286,7 +283,7 @@ def resize(message, daemon: Daemon):
     new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_sounds)
 
-    return f"{'Урок' if event_type == 'lesson' else 'Перемена'} № {order} теперь {'длиннее' if in_seconds > 0 else 'короче'} на {abs(in_seconds) // 60} минут(ы)"
+    return f"{'✅ Урок' if event_type == 'lesson' else 'Перемена'} № {order} теперь {'длиннее' if in_seconds > 0 else 'короче'} на {abs(in_seconds) // 60} минут(ы)"
 
 def shift(message, daemon: Daemon):
     args = message.text.split()[1:]
@@ -316,7 +313,7 @@ def shift(message, daemon: Daemon):
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
 
-    return f'Расписание на {utils.get_weekday_russian(datetime(year, month, day))}, {str(day).zfill(2)} {str(month).zfill(2)}, {year} сдвинуто на {in_seconds // 60} мин'
+    return f'✅ Расписание на {utils.get_weekday_russian(datetime(year, month, day))}, {str(day).zfill(2)} {str(month).zfill(2)}, {year} сдвинуто на {in_seconds // 60} мин'
 
 # /mute dd.mm.yyyy hh:mm
 def mute(message, daemon: Daemon):
@@ -342,7 +339,7 @@ def mute(message, daemon: Daemon):
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
 
-    return f'Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {str(day).zfill(2)}.{str(month).zfill(2)}.{year} не будет включён'
+    return f'✅ Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {str(day).zfill(2)}.{str(month).zfill(2)}.{year} не будет включён'
 
 # /mute dd.mm.yyyy hh:mm
 def mute_all(message, daemon: Daemon):
@@ -363,7 +360,7 @@ def mute_all(message, daemon: Daemon):
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
 
-    return f'Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут заглушены'
+    return f'✅ Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут заглушены'
 
 def unmute(message, daemon: Daemon):
     args = message.text.split()[1:]
@@ -388,7 +385,7 @@ def unmute(message, daemon: Daemon):
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
     
-    return f'Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {day}.{month}.{year} будет включён'
+    return f'✅ Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {day}.{month}.{year} будет включён'
 
 # /mute dd.mm.yyyy hh:mm
 def unmute_all(message, daemon: Daemon):
@@ -409,7 +406,7 @@ def unmute_all(message, daemon: Daemon):
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
 
-    return f'Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут включены'
+    return f'✅ Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут включены'
 
 def pre_ring_edit(message):
     args = message.text.split()[1:]
@@ -418,7 +415,7 @@ def pre_ring_edit(message):
     if delta_min <= 0: return
     
     configuration.pre_ring_delta = delta_min * 60
-    return f'Интервал изменён на {delta_min} минут'
+    return f'✅ Интервал изменён на {delta_min} минут'
 
 def events_duration(affected_events: EventType, message, daemon: Daemon):
     args = message.text.split()[1:]
@@ -620,6 +617,8 @@ def get_sounds():
     return ret
 
 def upload_sound(bot: TeleBot, message, name: str):
+    file_name = None
+
     if message.content_type == 'document':
         try:
             file_name = message.document.file_name
@@ -663,4 +662,4 @@ def weekly(message):
     print(sounds)
     timetable.weekly.set_weekly(table, sounds)
 
-    return 'Ок'
+    return '✅ Постоянное расписание обновлено'

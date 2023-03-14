@@ -19,15 +19,10 @@ def set_weekly(table, sounds):
     for time in table:
         sound = sounds[table.index(time)]
 
-        print(f"""UPDATE {configuration.time_table_name}
-        SET {weekday_json}=1,
-        sound="{sound}"
-        WHERE time="{time}"
-        """)
         cursor.execute(f"""UPDATE {configuration.time_table_name}
-        SET {weekday_json}=1,
-        sound="{sound}"
-        WHERE time="{time}"
+            SET {weekday_json}=1,
+            sound="{sound}"
+            WHERE time="{time}"
         """)
         connection.commit()
 

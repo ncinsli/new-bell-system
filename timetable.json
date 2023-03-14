@@ -1,16 +1,32 @@
 {
     "format": "shift",
     "configuration": {
-	"preBellTime": "2min",
-	"firstPreRingEnabled": true,
-	"allPreRingsEnabled": true,
-	"ringDuration": "3s",
-	"preRingDuration": "1s"
+        "preBellTime": "2min",
+        "firstPreRingEnabled": true,
+        "allPreRingsEnabled": true,
+        "ringDuration": "3s",
+        "preRingDuration": "1s"
     },
     "Monday": {
         "enable": true,
         "firstBell": "08:50",
-        "shifts": [35, 5, 45, 10, 45, 20, 45, 20, 45, 10, 45, 10, 45, 10, 45]
+        "shifts": [
+            35,
+            5,
+            45,
+            10,
+            45,
+            20,
+            45,
+            20,
+            45,
+            10,
+            45,
+            10,
+            45,
+            10,
+            45
+        ]
     },
     "Tuesday": {
         "enable": true,
@@ -33,9 +49,8 @@
     },
     "Wednesday": {
         "enable": true,
-        "firstBell": "09:00",
+        "firstBell": "09:45",
         "shifts": [
-            45,
             10,
             45,
             10,
@@ -47,6 +62,7 @@
             10,
             45,
             10,
+            45,
             45
         ]
     },

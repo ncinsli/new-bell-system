@@ -30,12 +30,19 @@ def remove(date_time: datetime):
 
     if len(overrides) == 0:
         # Значит этот день не был особенным, поэтому и удалять то нечего
-        return 1
-    else:
-        cursor.execute(f"""
-                DELETE FROM {table_override} WHERE time="{time_str}" 
-            """)
-        connection.commit()
+        timetable_today.append(time_str)
+
+        for ring_time in timetable_today:
+            # Мелодия не копируется, потому что звонок все равно будет удален
+            cursor.execute(f"""
+                    INSERT INTO {table_override}(year, month, day, time, muted) VALUES(?, ?, ?, ?, ?) 
+                """, [date_time.year, date_time.month, date_time.day, ring_time, 0])
+            connection.commit()    
+    
+    cursor.execute(f"""
+            DELETE FROM {table_override} WHERE time="{time_str}" 
+        """)
+    connection.commit()
 
     return 0
 
