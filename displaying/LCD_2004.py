@@ -63,7 +63,7 @@ try:
             self.lcd.crlf()
             self.lcd.write_string('    Version: 1.2')
             self.lcd.crlf()
-            self.lcd.write_string(' Last update: 09.03')
+            self.lcd.write_string(' Last update: 14.03')
             self.lcd.crlf()
             self.lcd.write_string('        2023')
             self.lcd.crlf()
@@ -139,7 +139,7 @@ try:
                 else:
                     self.lcd.crlf() 
                     self.lcd.write_string("\n")
-                    self.lcd.write_string(f"         {timestr}")
+                    self.lcd.write_string(f"        {timestr}")
             # screen updated!
             self.need_update = False
 
