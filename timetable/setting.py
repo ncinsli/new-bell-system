@@ -18,7 +18,7 @@ def set_time(items):
         except: # сорян!
             pass
 
-        for day in ("OnMonday", "OnTuesday", "OnWednesday", "OnThursday", "OnFriday", "OnSaturday", "OnSunday"):
+        for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"):
             if items[key] != None:
                 if day in items[key]:
                     values.append(1)
@@ -27,7 +27,7 @@ def set_time(items):
                 if len(items[key]) == 2:
                     if items[key][0] == items[key][1] and items[key][0] == day:
                         values2 = [key.zfill(5)]
-                        for d in ("OnMonday", "OnTuesday", "OnWednesday", "OnThursday", "OnFriday", "OnSaturday", "OnSunday"):
+                        for d in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"):
                             if d != day:
                                 values2.append(0)
                             else:
@@ -39,12 +39,12 @@ def set_time(items):
                                 values2.append(0)
                         #print(values2)
                         cursor.execute(f"""
-                            INSERT INTO {table}(time, OnMonday, OnTuesday, OnWednesday, OnThursday, OnFriday, OnSaturday, OnSunday) Values(?, ?, ?, ?, ?, ?, ?, ?)""", values2)
+                            INSERT INTO {table}(time, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) Values(?, ?, ?, ?, ?, ?, ?, ?)""", values2)
                         connection.commit()
                         continue
             else:
                 values = [key.zfill(5), 0, 0, 0, 0, 0, 0, 0] 
 
         cursor.execute(f"""
-            INSERT INTO {table}(time, OnMonday, OnTuesday, OnWednesday, OnThursday, OnFriday, OnSaturday, OnSunday) Values(?, ?, ?, ?, ?, ?, ?, ?)""", values)
+            INSERT INTO {table}(time, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) Values(?, ?, ?, ?, ?, ?, ?, ?)""", values)
         connection.commit()

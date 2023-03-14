@@ -7,7 +7,7 @@ connection = configuration.connection
 
 def add_default_bells(con, cursor, time, m, t = 0, w = 0, th = 0, f = 0, s = 0, su = 0):
     cursor.execute(f"""
-            INSERT INTO {'bells'}(time, OnMonday, OnTuesday, OnWednesday, OnThursday, OnFriday, OnSaturday, OnSunday) Values(?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO {'bells'}(time, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) Values(?, ?, ?, ?, ?, ?, ?, ?)
         """, [time, m, t, w, th, f, s, su])
     connection.commit()
 

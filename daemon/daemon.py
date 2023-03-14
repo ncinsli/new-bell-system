@@ -65,7 +65,7 @@ class Daemon(threading.Thread):
 
     def run(self):
         while True:
-            time.sleep(1)
+            time.sleep(configuration.daemon_delay_time)
             timing = str(datetime.now().time())[:5]
             timing_forward = timetable.utils.sum_times(timing, configuration.pre_ring_delta)
 
@@ -129,7 +129,13 @@ class Daemon(threading.Thread):
             if (timing_forward in self.today_timetable and timing != self.last_called_timing):
                 self.order = self.today_timetable.index(timing_forward)
 
+                if configuration.all_pre_rings_enabled == False:
+                    continue
+
                 if self.order % 2 != 0: continue
+                if self.order == 0:
+                    if configuration.first_pre_ring_enabled == False:
+                        continue
 
                 if self.sounds[self.order] != -1:
                     logging.warn(f'Started pre-ring for {configuration.pre_ring_duration} seconds')

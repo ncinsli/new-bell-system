@@ -25,7 +25,7 @@ def get_time(date: datetime):
     
     if content == []:
         # Значит на этот день распространяется обычное расписание
-        columnName = 'On' + calendar.day_name[date.weekday()].capitalize()
+        columnName = calendar.day_name[date.weekday()].capitalize()
         cursor.execute(f"""
             SELECT time, muted, sound
             FROM {table}

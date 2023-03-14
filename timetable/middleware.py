@@ -36,13 +36,13 @@ def init():
     CREATE TABLE IF NOT EXISTS {table} (
         id INTEGER,
         time TEXT NOT NULL,
-        OnMonday INTEGER DEFAULT 0,
-        OnTuesday INTEGER DEFAULT 0,
-        OnWednesday INTEGER DEFAULT 0,
-        OnThursday INTEGER DEFAULT 0,
-        OnFriday INTEGER DEFAULT 0,  
-        OnSaturday INTEGER DEFAULT 0,
-        OnSunday INTEGER DEFAULT 0,
+        Monday INTEGER DEFAULT 0,
+        Tuesday INTEGER DEFAULT 0,
+        Wednesday INTEGER DEFAULT 0,
+        Thursday INTEGER DEFAULT 0,
+        Friday INTEGER DEFAULT 0,  
+        Saturday INTEGER DEFAULT 0,
+        Sunday INTEGER DEFAULT 0,
         FromDay TEXT DEFAULT "01.09",
         TillDay TEXT  DEFAULT "31.05",
         muted INTEGER DEFAULT 0,
@@ -135,13 +135,19 @@ def set_time(bot: TeleBot, message, daemon: Daemon):
     if "format" not in table:
         return INCORRECT_FORMAT_ERROR
 
+    configuration.reset_configuration() # перезапись дефолтных значений
+    if "configuration" in table:
+        ret = rings_configuration_handler(table["configuration"]) # прогружает вкладку configuration, переписывает переменные configuration.py по имеющимся в timetable.json данным
+        if ret != 0:
+            configuration.reset_configuration()
+            return INCORRECT_FORMAT_ERROR
+
     if table["format"] == "shift":
         returned = shift_table_handler(table)
     elif table["format"] == "absolute":
         returned = absolute_table_handler(table)
     else:
         return INCORRECT_FORMAT_ERROR
-
     new_timetable, new_muted = timetable.getting.get_time(datetime.now())
     daemon.update(new_timetable, new_muted)
     
@@ -150,12 +156,29 @@ def set_time(bot: TeleBot, message, daemon: Daemon):
         
     return returned
 
+def rings_configuration_handler(cfg):
+    if "preBellTime" in cfg:
+        try: configuration.pre_ring_delta = utils.time_literals_to_seconds(cfg["preBellTime"]) 
+        except: return INCORRECT_FORMAT_ERROR
+    if "ringDuration" in cfg:
+        try: configuration.ring_duration = utils.time_literals_to_seconds(cfg["ringDuration"]) 
+        except: return INCORRECT_FORMAT_ERROR
+    if "preRingDuration" in cfg:
+        try: configuration.pre_ring_duration = utils.time_literals_to_seconds(cfg["preRingDuration"]) 
+        except: return INCORRECT_FORMAT_ERROR
+    if "firstPreRingEnabled" in cfg:
+        try: configuration.first_pre_ring_enabled = cfg["firstPreRingEnabled"] 
+        except: return INCORRECT_FORMAT_ERROR
+    if "allPreRingsEnabled" in cfg:
+        try: configuration.all_pre_rings_enabled = cfg["allPreRingsEnabled"] 
+        except: return INCORRECT_FORMAT_ERROR
+    return 0
 
 def shift_table_handler(table):
     bells = ['08:30', '08:50', '09:00', '09:15', '09:35', '09:45', '09:25', '09:55', '10:10', '10:30', '10:40', '10:20', '10:50', '11:05', '11:35', '11:25', '11:45', '11:55', '12:10', '12:40', '12:30', '12:50', '13:00', '13:15', '13:35', '13:45', '13:25', '13:55', '14:10', '14:30', '14:40', '14:15', '14:50', '15:00', '15:25', '15:35']
     pre_db = dict.fromkeys(bells)
 
-    for day in ('OnMonday', 'OnTuesday', 'OnWednesday', 'OnThursday', 'OnFriday', 'OnSaturday', 'OnSunday'):
+    for day in ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'):
         if "enable" in table[day]:
             if not table[day]["enable"]:
                 continue # в этот день звонки отключены
@@ -206,7 +229,7 @@ def absolute_table_handler(table):
     bells = ['08:30', '08:50', '09:00', '09:15', '09:35', '09:45', '09:25', '09:55', '10:10', '10:30', '10:40', '10:20', '10:50', '11:05', '11:35', '11:25', '11:45', '11:55', '12:10', '12:40', '12:30', '12:50', '13:00', '13:15', '13:35', '13:45', '13:25', '13:55', '14:10', '14:30', '14:40', '14:15', '14:50', '15:00', '15:25', '15:35']
     pre_db = dict.fromkeys(bells)
 
-    for day in ('OnMonday', 'OnTuesday', 'OnWednesday', 'OnThursday', 'OnFriday', 'OnSaturday', 'OnSunday'):
+    for day in ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'):
         if "enable" in table[day]:
             if table[day]["enable"] == False:
                 continue # в этот день звонки отключены

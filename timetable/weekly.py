@@ -8,7 +8,7 @@ cursor = connection.cursor()
 def set_weekly(table, sounds):
     start = table[0]
     shifts = []
-    weekday_json = ("OnMonday", "OnTuesday", "OnWednesday", "OnThursday", "OnFriday", "OnSaturday", "OnSunday")[datetime.now().weekday()]
+    weekday_json = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")[datetime.now().weekday()]
 
 
     cursor.execute(f"""UPDATE {configuration.time_table_name}
