@@ -98,12 +98,27 @@ def get_debug_info(daemon: daemon.Daemon):
 
 Список звуков: {daemon.sounds}"""
 
-def load_default_timetable(daemon: daemon.Daemon):
+def load_default_timetable(daemon: daemon.Daemon, only_configuration: bool):
     with open('timetable.json', 'r') as table_file:
         table = json.loads(table_file.read())
         
         if "format" not in table:
             pass
+
+        old_configuration = [configuration.pre_ring_delta, 
+            configuration.ring_duration, 
+            configuration.max_ring_duration,
+            configuration.pre_ring_duration,
+            configuration.first_pre_ring_enabled,
+            configuration.all_pre_rings_enabled]
+
+        if "configuration" in table:
+            ret = timetable.middleware.rings_configuration_handler(table["configuration"]) # прогружает вкладку configuration, переписывает переменные configuration.py по имеющимся в timetable.json данным
+            if ret != 0:
+                configuration.reset_configuration(old_configuration)
+
+        if only_configuration == True:
+            return
 
         if table["format"] == "shift":
             returned = timetable.middleware.shift_table_handler(table)

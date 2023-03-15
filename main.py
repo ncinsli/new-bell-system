@@ -517,10 +517,15 @@ daemon.excepthook = thread_exception_handler
 
 if database_exists == False:
     try:
-        utils.load_default_timetable(daemon)
+        utils.load_default_timetable(daemon, False)
     except Exception as e:
         print(e)
         logging.info('No .json file, using default configs which may not be precisient')
+
+# TODO: придумать нормальное решение для загузки configuration значений
+else:
+    try: utils.load_default_timetable(daemon, True) 
+    except: pass
 
 for owner in configuration.owners:
     admins.edit.append(owner)

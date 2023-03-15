@@ -2,10 +2,10 @@
     "format": "shift",
     "configuration": {
         "preBellTime": "2min",
-        "firstPreRingEnabled": true,
+        "firstPreRingEnabled": false,
         "allPreRingsEnabled": true,
-        "ringDuration": "3s",
-        "preRingDuration": "1s"
+        "ringDuration": "6s",
+        "preRingDuration": "3s"
     },
     "Monday": {
         "enable": true,

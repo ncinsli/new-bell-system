@@ -24,7 +24,7 @@ def shift(date: datetime, mins: int):
 
     if content is None:
         # Значит на этот день ищем обычное расписание
-        columnName = 'On' + calendar.day_name[date.weekday()].capitalize()
+        columnName = calendar.day_name[date.weekday()].capitalize()
 
         cursor.execute(f"""
             SELECT time, muted 

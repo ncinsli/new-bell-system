@@ -132,11 +132,17 @@ def set_time(bot: TeleBot, message, daemon: Daemon):
     if "format" not in table:
         return INCORRECT_FORMAT_ERROR
 
-    configuration.reset_configuration() # перезапись дефолтных значений
+    old_configuration = [configuration.pre_ring_delta, 
+        configuration.ring_duration, 
+        configuration.max_ring_duration,
+        configuration.pre_ring_duration,
+        configuration.first_pre_ring_enabled,
+        configuration.all_pre_rings_enabled]
+
     if "configuration" in table:
         ret = rings_configuration_handler(table["configuration"]) # прогружает вкладку configuration, переписывает переменные configuration.py по имеющимся в timetable.json данным
         if ret != 0:
-            configuration.reset_configuration()
+            configuration.reset_configuration(old_configuration)
             return INCORRECT_FORMAT_ERROR
 
     if table["format"] == "shift":
@@ -155,14 +161,32 @@ def set_time(bot: TeleBot, message, daemon: Daemon):
 
 def rings_configuration_handler(cfg):
     if "preBellTime" in cfg:
-        try: configuration.pre_ring_delta = utils.time_literals_to_seconds(cfg["preBellTime"]) 
+        try: 
+            preBellTime = utils.time_literals_to_seconds(cfg["preBellTime"])
+            if preBellTime != "":
+                configuration.pre_ring_delta = preBellTime 
+            else:
+                return INCORRECT_FORMAT_ERROR
         except: return INCORRECT_FORMAT_ERROR
+
     if "ringDuration" in cfg:
-        try: configuration.ring_duration = utils.time_literals_to_seconds(cfg["ringDuration"]) 
+        try: 
+            ringDuration = utils.time_literals_to_seconds(cfg["ringDuration"])
+            if ringDuration != "":
+                configuration.ring_duration = ringDuration
+            else:
+                return INCORRECT_FORMAT_ERROR
         except: return INCORRECT_FORMAT_ERROR
+
     if "preRingDuration" in cfg:
-        try: configuration.pre_ring_duration = utils.time_literals_to_seconds(cfg["preRingDuration"]) 
+        try: 
+            preRingDuration = utils.time_literals_to_seconds(cfg["preRingDuration"])
+            if preRingDuration != "":
+                configuration.pre_ring_duration = preRingDuration
+            else:
+                return INCORRECT_FORMAT_ERROR
         except: return INCORRECT_FORMAT_ERROR
+    
     if "firstPreRingEnabled" in cfg:
         try: configuration.first_pre_ring_enabled = cfg["firstPreRingEnabled"] 
         except: return INCORRECT_FORMAT_ERROR
@@ -273,6 +297,8 @@ def resize(message, daemon: Daemon):
     date = datetime(year, month, day)
     
     in_seconds = utils.time_literals_to_seconds(delta)
+    if in_seconds == "":
+        return "❌ Неверное время"
 
     if event_type == 'lesson':
         timetable.resizing.resize(date, EventType.LESSON, order * 2, in_seconds)

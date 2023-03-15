@@ -7,7 +7,7 @@ def get_weekday_russian(date_time: datetime):
     return days[date_time.weekday()].lower()
 
 def time_literals_to_seconds(delta): # абревиатуры типа 2m превращает в 120секунд
-    in_seconds = 0
+    in_seconds = "" # функция возращает пустую строку вместо числа в случае, если литералы не верны по формату
     occurence = delta.find(next(filter(str.isalpha, delta)))
 
     measured_value = int(delta[:occurence])
@@ -19,9 +19,22 @@ def time_literals_to_seconds(delta): # абревиатуры типа 2m пре
 
     return in_seconds
 
-def is_time_format(timeArg):
-    # TODO: написать
-    return timeArg
+def is_time_format(time_arg):
+    if type(time_arg) != type(""):
+        return False
+    time_arg = time_arg.split(":")
+    if len(time_arg) != 2:
+        return False
+    try:
+        hours = int(time_arg[0])
+        minutes = int(time_arg[1])
+        if hours > 23 or hours < 0:
+            return False
+        if minutes > 59 or minutes < 0:
+            return False
+    except:
+        return False
+    return True
 
 def sum_times(initial_time: str, seconds: int):
     if seconds == 0: return initial_time

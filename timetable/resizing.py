@@ -22,7 +22,7 @@ def resize(date: datetime, event: EventType, order: int, seconds: int): # -> Use
 
     try:
         dmy = f'{date.year}.{str(date.month).zfill(2)}.{str(date.day).zfill(2)}'
-        columnName = 'On' + calendar.day_name[date.weekday()].capitalize()
+        columnName = calendar.day_name[date.weekday()].capitalize()
 
         cursor.execute(f"""
                     SELECT muted FROM {table_override}
@@ -91,7 +91,7 @@ def resize_events(date: datetime, event: EventType, seconds: int):
     #print(new_timetable, len(new_timetable))
     try:
         dmy = f'{date.year}.{str(date.month).zfill(2)}.{str(date.day).zfill(2)}'
-        columnName = 'On' + calendar.day_name[date.weekday()].capitalize()
+        columnName = calendar.day_name[date.weekday()].capitalize()
 
         cursor.execute(f"""
                     SELECT muted FROM {table_override}

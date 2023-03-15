@@ -129,12 +129,12 @@ class Daemon(threading.Thread):
             if (timing_forward in self.today_timetable and timing != self.last_called_timing):
                 self.order = self.today_timetable.index(timing_forward)
 
-                if configuration.all_pre_rings_enabled == False:
-                    continue
-
                 if self.order % 2 != 0: continue
                 if self.order == 0:
                     if configuration.first_pre_ring_enabled == False:
+                        continue
+                else:
+                    if configuration.all_pre_rings_enabled == False:
                         continue
 
                 if self.sounds[self.order] != -1:
