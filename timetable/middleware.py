@@ -543,7 +543,7 @@ def pop(message, daemon: Daemon):
     return "✅ Звонок удалён" if not res else "❌ Такого звонка не было"
 
 
-def set_sound(message, daemon: Daemon, pre: bool):
+def set_sound(message, daemon: Daemon, is_preparatory=False):
     args = message.text.split()[1:]
     sound_files = utils.get_sound_file_list()
     print(sound_files)
@@ -554,12 +554,11 @@ def set_sound(message, daemon: Daemon, pre: bool):
         year = int(args[0].split('.')[2])
         
         if ':' not in message.text:
-            name = ' '.join(args[1:]).strip()
-
+            name = ' '.join(args[1:]).strip().capitalize()
             if name not in sound_files: 
                 return f"❌ Мелодия не добавлена на звонок, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound {name}</code> "
 
-            res = timetable.sounds.set_sound_day(datetime(year, month, day), name, pre)
+            res = timetable.sounds.set_sound_day(datetime(year, month, day), name, is_preparatory)
             
             if not res:
                 new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
@@ -568,7 +567,7 @@ def set_sound(message, daemon: Daemon, pre: bool):
             return "✅ Мелодия добавлена на звонок" if not res else "❌ Мелодия не добавлена на звонок"
 
         ring_time = args[1].split(':')
-        name = ' '.join(args[2:]).strip()
+        name = ' '.join(args[2:]).strip().capitalize()
 
         if name not in sound_files: 
             return f"❌ Мелодия не добавлена на звонок, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound {name}</code> "
@@ -582,12 +581,12 @@ def set_sound(message, daemon: Daemon, pre: bool):
         year = datetime.now().year
 
         if ':' not in message.text:
-            name = ' '.join(args[0:]).strip()
+            name = ' '.join(args[0:]).strip().capitalize()
 
             if name not in sound_files: 
                 return f"❌ Мелодия не добавлена на звонок, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound {name}</code> "
             
-            res = timetable.sounds.set_sound_day(datetime(year, month, day), name, pre)
+            res = timetable.sounds.set_sound_day(datetime(year, month, day), name, is_preparatory)
            
             if not res:
                 new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
@@ -595,7 +594,7 @@ def set_sound(message, daemon: Daemon, pre: bool):
 
             return "✅ Мелодия добавлена на звонок" if not res else "❌ Мелодия не добавлена на звонок"
 
-        name = ' '.join(args[1:]).strip()
+        name = ' '.join(args[1:]).strip().capitalize()
 
         if name not in sound_files: 
             return f"❌ Мелодия не добавлена на звонок, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound {name}</code> "
@@ -608,7 +607,7 @@ def set_sound(message, daemon: Daemon, pre: bool):
     if ring_h > 23 or ring_h < 0 or ring_m > 59 or ring_m < 0:
         return "❌ Неверное время" 
 
-    res = timetable.sounds.set_sound(datetime(year, month, day, ring_h, ring_m), name, pre)
+    res = timetable.sounds.set_sound(datetime(year, month, day, ring_h, ring_m), name, is_preparatory)
     
     if not res:
         new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
@@ -640,6 +639,12 @@ def get_sounds():
     
     else: ret += f"<b>Нет мелодии по умолчанию</b>\n"
 
+    if 'Defaultpre' in sounds:
+        ret += f"<b>Мелодия предзвонка по умолчанию</b>\n"
+        sounds.remove('Defaultpre')
+
+    else: ret += f"<b>Нет мелодии предзвонка по умолчанию</b>\n"
+
 
     for i in range(0, len(sounds)):
         ret += f"{i + 1}. {sounds[len(sounds) - i - 1]}\n"
@@ -657,7 +662,7 @@ def upload_sound(bot: TeleBot, message, name: str):
 
             content = bot.download_file(file_id_info.file_path)
         except:
-            return "❌ Ошибка при получении звукового файла!" 
+            return "❌ Ошибка при получении звукового файла" 
   
     elif message.content_type == 'audio':
         try:
@@ -666,13 +671,13 @@ def upload_sound(bot: TeleBot, message, name: str):
             file_id_info = bot.get_file(message.audio.file_id)
             content = bot.download_file(file_id_info.file_path)
         except:
-            return "❌ Ошибка при получении звукового файла!" 
+            return "❌ Ошибка при получении звукового файла" 
     
-    
+    if file_name is None: return "❌ Ошибка в имени файла!"
     sound_path = f"./sounds/{name.capitalize()}.{file_name[-3:]}"
 
     if os.path.exists(sound_path) and name != 'default':
-        return "❌ Звуковой файл с таким именем уже существует!"
+        return "❌ Звуковой файл с таким именем уже существует"
     else:
         try:
             with open(sound_path, 'wb') as file:
@@ -682,7 +687,7 @@ def upload_sound(bot: TeleBot, message, name: str):
 
         except Exception as e:
             print(e)
-            return "❌ Ошибка при чтении звукового файла!"
+            return "❌ Ошибка при чтении звукового файла"
         
     return "✅ Звуковой файл успешно записан"
 

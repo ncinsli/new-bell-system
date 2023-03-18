@@ -96,9 +96,11 @@ def get_debug_info(daemon: daemon.Daemon):
 🕸️ Демон
 Список звонков: {daemon.today_timetable}
 
-Список звуков: {daemon.sounds}"""
+Список мелодий: {daemon.sounds}
 
-def load_default_timetable(daemon: daemon.Daemon, only_configuration: bool):
+Список мелодий для предварительных звонков: {daemon.presounds}"""
+
+def load_default_timetable(daemon: daemon.Daemon, configuration_only=False):
     with open('timetable.json', 'r') as table_file:
         table = json.loads(table_file.read())
         
@@ -117,8 +119,7 @@ def load_default_timetable(daemon: daemon.Daemon, only_configuration: bool):
             if ret != 0:
                 configuration.reset_configuration(old_configuration)
 
-        if only_configuration == True:
-            return
+        if configuration_only: return
 
         if table["format"] == "shift":
             returned = timetable.middleware.shift_table_handler(table)

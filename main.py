@@ -400,8 +400,8 @@ def set_sound(message):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.set_sound)
         else:
-            result = timetable.middleware.set_sound(message, daemon, pre=False)
-                        
+            result = timetable.middleware.set_sound(message, daemon)
+            
             bot.send_message(message.from_user.id, result)
          
             logging.info(f'@{str(message.from_user.username).lower()} set new sound ({message.text})')
@@ -409,14 +409,14 @@ def set_sound(message):
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
-@bot.message_handler(commands=["set_sound_pre"])
-def set_sound_pre(message):
+@bot.message_handler(commands=["set_pre_sound"])
+def set_pre_sound(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.set_sound_pre)
         else:
-            result = timetable.middleware.set_sound(message, daemon, pre=True)
-                        
+            result = timetable.middleware.set_sound(message, daemon, is_preparatory=True)
+
             bot.send_message(message.from_user.id, result)
          
             logging.info(f'@{str(message.from_user.username).lower()} set new presound ({message.text})')
@@ -467,6 +467,13 @@ def upload_default_sound_callback(call):
     bot.register_next_step_handler(call.message, get_new_sound)
     logging.info(f'@{call.message.from_user.username} requested to upload sound file')
 
+
+@bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/upload_default_pre_sound' and call.message)
+def upload_default_pre_sound_callback(call):
+    bot.reply_to(call.message, f'🎵 Отправьте звуковой файл, который будет проигрываться по умолчанию на предварительном звонке', parse_mode='HTML')
+    bot.register_next_step_handler(call.message, get_new_sound, 'defaultpre')
+    logging.info(f'@{call.message.from_user.username} requested to upload sound file')
+
 @bot.message_handler(commands=["upload_default_sound"])
 def upload_default_sound(message):
     if (admins.validator.check(message)):
@@ -485,9 +492,10 @@ def get_new_sound(message, name = 'default'):
 
 @bot.message_handler(commands=["sounds"])
 def sounds(message):
-    set_default = types.InlineKeyboardButton(text="Установить мелодию по умолчанию", callback_data=f"/upload_default_sound")
-    upload_new = types.InlineKeyboardButton(text="Добавить мелодию в базу", callback_data=f"/upload_sound")
-    bot.send_message(message.from_user.id, timetable.middleware.get_sounds(), reply_markup=types.InlineKeyboardMarkup().add(set_default).add(upload_new))
+    set_default = types.InlineKeyboardButton(text="Установить мелодию по умолчанию", callback_data="/upload_default_sound")
+    set_pre_default = types.InlineKeyboardButton(text="Установить на предварительный звонок", callback_data="/upload_default_pre_sound")
+    upload_new = types.InlineKeyboardButton(text="Добавить мелодию в базу", callback_data="/upload_sound")
+    bot.send_message(message.from_user.id, timetable.middleware.get_sounds(), reply_markup=types.InlineKeyboardMarkup().add(set_default).add(set_pre_default).add(upload_new))
 
 @bot.message_handler(commands=["dbg"])
 def debug_info(message):
@@ -515,7 +523,7 @@ def weekly_ask(message):
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/weekly' and call.message)
 def weekly(message):
     res = timetable.middleware.weekly(message)
-    utils.load_default_timetable(daemon)
+    # utils.load_default_timetable(daemon)
     bot.send_message(message.from_user.id, res)
 
 print(f"[MAIN] Let's go!")

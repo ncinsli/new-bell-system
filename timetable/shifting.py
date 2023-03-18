@@ -27,7 +27,7 @@ def shift(date: datetime, mins: int):
         columnName = calendar.day_name[date.weekday()].capitalize()
 
         cursor.execute(f"""
-            SELECT time, muted 
+            SELECT time, muted, sound, presound
             FROM {table}
             WHERE {columnName}=1
         """)
@@ -36,8 +36,8 @@ def shift(date: datetime, mins: int):
 
         for copied in content:
             cursor.execute(f"""
-                INSERT INTO {table_override}(year, month, day, time, muted) VALUES(?, ?, ?, ?, ?)
-            """, [date.year, date.month, date.day, copied[0], copied[1]])
+                INSERT INTO {table_override}(year, month, day, time, muted, sound, presound) VALUES(?, ?, ?, ?, ?, ?, ?)
+            """, [date.year, date.month, date.day, copied[0], copied[1], copied[2], copied[3]])
 
     timetable.resizing.resize(date, EventType.LESSON, 1, mins * 60)
     

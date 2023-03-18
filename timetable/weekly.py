@@ -11,7 +11,6 @@ def set_weekly(table, sounds, presounds):
     shifts = []
     weekday_json = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")[datetime.now().weekday()]
 
-
     cursor.execute(f"""UPDATE {configuration.time_table_name}
     SET {weekday_json}=0
     """)
@@ -20,15 +19,23 @@ def set_weekly(table, sounds, presounds):
     for time in table:
         sound = sounds[table.index(time)]
 
-        cursor.execute(f"""UPDATE {configuration.time_table_name}
-            SET {weekday_json}=1,
-            sound="{sound}"
+        cursor.execute(f"""SELECT id FROM {configuration.time_table_name}
             WHERE time="{time}"
         """)
+        occurences = cursor.fetchall()
         connection.commit()
 
+        if len(occurences) == 0:
+            cursor.execute(f"""UPDATE {configuration.time_table_name}
+                SET {weekday_json}=1,
+                muted={1 if sound == -1 else 0},
+                sound="{sound}"
+                WHERE time="{time}"
+            """)
+            connection.commit()
+
         try:
-            cursor.execute(f"""INSERT INTO {configuration.time_table_name}(time, {weekday_json}, sound) VALUES("{time}", 1, "{sound}")""")
+            cursor.execute(f"""INSERT INTO {configuration.time_table_name}(time, {weekday_json}, muted, sound) VALUES(?, ?, ?, ?)""", [time, 1, 1 if sound == -1 else 0, sound])
             connection.commit()
         except: pass
 
