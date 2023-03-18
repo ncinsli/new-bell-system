@@ -19,6 +19,7 @@ import daemon.ring_callbacks as ring_callbacks
 class Daemon(threading.Thread):
     today_timetable: list
     sounds: list
+    presounds: list
     order = 0
     last_called_timing: str = '00:00'
     next_called_timing: str = '00:00'
@@ -26,13 +27,13 @@ class Daemon(threading.Thread):
     debugger : telebot.TeleBot
     day: int
 
-    def __init__(self, table, muted):
+    def __init__(self, table, muted, presounds):
         super().__init__()
 
         log_filename = os.path.join('logs', f'{datetime.now().strftime("%a %d %b %Y %H;%M;%S")}.log')
         
         self.daemon = True
-        self.update(table, muted)
+        self.update(table, muted, presounds)
         self.day = datetime.now().day
         
         if (os.system(f'echo 1 > /sys/class/gpio{configuration.port}/value && echo 0 > /sys/class/gpio{configuration.port}/value') == 0):
@@ -53,8 +54,8 @@ class Daemon(threading.Thread):
         self.order = utils.nearest_forward_ring_index(self.today_timetable)
         logging.info(f'Updated ring order to: {self.order}')
 
-    def update(self, new_timetable, new_muted):
-        self.today_timetable, self.sounds = new_timetable, new_muted # Обращаться к sqlite из другого потока нельзя
+    def update(self, new_timetable, new_muted, new_presounds):
+        self.today_timetable, self.sounds, self.presounds = new_timetable, new_muted, new_presounds # Обращаться к sqlite из другого потока нельзя
         self.today_timetable = list(map(lambda e: e.zfill(5), self.today_timetable))
         
         try: self.display.update(self.today_timetable, self.order, self.next_called_timing)
@@ -137,10 +138,10 @@ class Daemon(threading.Thread):
                     if configuration.all_pre_rings_enabled == False:
                         continue
 
-                if self.sounds[self.order] != -1:
+                if self.presounds[self.order] != -1:
                     logging.warn(f'Started pre-ring for {configuration.pre_ring_duration} seconds')
 
-                    ring_callbacks.ring(self.sounds[self.order], configuration.pre_ring_duration)
+                    ring_callbacks.ring(self.presounds[self.order], configuration.pre_ring_duration)
                     
                     logging.warn(f'Stopped pre-ring')
 

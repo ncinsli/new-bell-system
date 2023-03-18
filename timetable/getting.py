@@ -12,7 +12,7 @@ def get_time(date: datetime):
     cursor = connection.cursor()
 
     cursor.execute(f"""
-        SELECT time, muted, sound
+        SELECT time, muted, sound, presound
         FROM {table_override}
         WHERE day={date.day} 
               AND month={date.month}
@@ -27,7 +27,7 @@ def get_time(date: datetime):
         # Значит на этот день распространяется обычное расписание
         columnName = calendar.day_name[date.weekday()].capitalize()
         cursor.execute(f"""
-            SELECT time, muted, sound
+            SELECT time, muted, sound, presound
             FROM {table}
             WHERE {columnName}=1
             ORDER BY time
@@ -38,9 +38,11 @@ def get_time(date: datetime):
 
     prepared_content = []
     sounds = []
+    presounds = []
     for time in content:
         prepared_content.append(time[0].zfill(2))
         sounds.append(time[2] if time[1] == 0 else -1)
+        presounds.append(time[3] if time[1] == 0 else -1)
 
     content = list(map(lambda e: str(e).zfill(2), prepared_content))
-    return content, sounds
+    return content, sounds, presounds

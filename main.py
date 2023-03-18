@@ -2,7 +2,7 @@ import os
 
 database_exists = True
 if not os.path.exists("database.db"):
-    print("No database found.")
+    print("[MAIN] No database found.")
     database_exists = False
 
 
@@ -51,9 +51,9 @@ timetable.middleware.init()
 admins.middleware.init()
 
 date_time = datetime.now()
-refreshed_timetable, refreshed_soundtable = timetable.getting.get_time(datetime(date_time.year, date_time.month, date_time.day))
+refreshed_timetable, refreshed_soundtable, new_presoundtable = timetable.getting.get_time(datetime(date_time.year, date_time.month, date_time.day))
 
-daemon = Daemon(refreshed_timetable, refreshed_soundtable)
+daemon = Daemon(refreshed_timetable, refreshed_soundtable, new_presoundtable)
 
 daemon.debugger = bot
 
@@ -400,11 +400,26 @@ def set_sound(message):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.set_sound)
         else:
-            result = timetable.middleware.set_sound(message, daemon)
+            result = timetable.middleware.set_sound(message, daemon, pre=False)
                         
             bot.send_message(message.from_user.id, result)
          
             logging.info(f'@{str(message.from_user.username).lower()} set new sound ({message.text})')
+    else:
+        bot.reply_to(message, replies.results.access_denied)    
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.message_handler(commands=["set_sound_pre"])
+def set_sound_pre(message):
+    if (admins.validator.check(message)):
+        if ' ' not in message.text:
+            bot.reply_to(message, replies.format_tip.set_sound_pre)
+        else:
+            result = timetable.middleware.set_sound(message, daemon, pre=True)
+                        
+            bot.send_message(message.from_user.id, result)
+         
+            logging.info(f'@{str(message.from_user.username).lower()} set new presound ({message.text})')
     else:
         bot.reply_to(message, replies.results.access_denied)    
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')

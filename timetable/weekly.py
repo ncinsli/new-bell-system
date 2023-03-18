@@ -5,7 +5,8 @@ import json
 connection = configuration.connection
 cursor = connection.cursor()
 
-def set_weekly(table, sounds):
+def set_weekly(table, sounds, presounds):
+    #TODO: PRESOUNDS
     start = table[0]
     shifts = []
     weekday_json = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")[datetime.now().weekday()]

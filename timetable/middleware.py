@@ -44,6 +44,7 @@ def init():
         TillDay TEXT  DEFAULT "31.05",
         muted INTEGER DEFAULT 0,
         sound TEXT DEFAULT "default",
+        presound TEXT DEFAULT "defaultpre",
         PRIMARY KEY(id AUTOINCREMENT)
     ) 
     """)
@@ -65,13 +66,15 @@ def init():
         time TEXT NOT NULL,
         muted INTEGER DEFAULT 0,
         sound TEXT DEFAULT "default",
+        presound TEXT DEFAULT "defaultpre",
         PRIMARY KEY(id AUTOINCREMENT)
     ) 
     """)
     connection.commit()
 
 def get_time_raw(date: datetime):
-    list_db, sounds = timetable.getting.get_time(date)
+    # TODO: PRESOUNDS
+    list_db, sounds, presounds = timetable.getting.get_time(date)
     combined = []
     # print(list_db, muted)
     for i in range(0, len(list_db) - 1):
@@ -151,8 +154,8 @@ def set_time(bot: TeleBot, message, daemon: Daemon):
         returned = absolute_table_handler(table)
     else:
         return INCORRECT_FORMAT_ERROR
-    new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-    daemon.update(new_timetable, new_muted)
+    new_timetable, new_muted, new_presounds = timetable.getting.get_time(datetime.now())
+    daemon.update(new_timetable, new_muted, new_presounds)
     
     with open('timetable.json', 'w') as file:
         file.write(content)
@@ -306,8 +309,8 @@ def resize(message, daemon: Daemon):
     if event_type == 'break':
         timetable.resizing.resize(date, EventType.BREAK, order * 2 + 1, in_seconds)
 
-    new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
-    daemon.update(new_timetable, new_sounds)
+    new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
+    daemon.update(new_timetable, new_sounds, new_presounds)
 
     return f"{'✅ Урок' if event_type == 'lesson' else 'Перемена'} № {order} теперь {'длиннее' if in_seconds > 0 else 'короче'} на {abs(in_seconds) // 60} минут(ы)"
 
@@ -336,8 +339,8 @@ def shift(message, daemon: Daemon):
 
     timetable.shifting.shift(datetime(year, month, day), in_seconds // 60)
 
-    new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-    daemon.update(new_timetable, new_muted)
+    new_timetable, new_muted, new_presounds = timetable.getting.get_time(datetime.now())
+    daemon.update(new_timetable, new_muted, new_presounds)
 
     return f'✅ Расписание на {utils.get_weekday_russian(datetime(year, month, day))}, {str(day).zfill(2)} {str(month).zfill(2)}, {year} сдвинуто на {in_seconds // 60} мин'
 
@@ -362,8 +365,8 @@ def mute(message, daemon: Daemon):
     # Сериализация
     timetable.muting.mute(datetime(year, month, day, hour, minutes))
 
-    new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-    daemon.update(new_timetable, new_muted)
+    new_timetable, new_muted, new_presounds = timetable.getting.get_time(datetime.now())
+    daemon.update(new_timetable, new_muted, new_presounds)
 
     return f'✅ Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {str(day).zfill(2)}.{str(month).zfill(2)}.{year} не будет включён'
 
@@ -383,8 +386,8 @@ def mute_all(message, daemon: Daemon):
     # Сериализация
     timetable.muting.mute_all(datetime(year, month, day))
 
-    new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-    daemon.update(new_timetable, new_muted)
+    new_timetable, new_muted, new_presounds = timetable.getting.get_time(datetime.now())
+    daemon.update(new_timetable, new_muted, new_presounds)
 
     return f'✅ Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут заглушены'
 
@@ -408,8 +411,8 @@ def unmute(message, daemon: Daemon):
     # Сериализация
     timetable.muting.unmute(datetime(year, month, day, hour, minutes))
 
-    new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-    daemon.update(new_timetable, new_muted)
+    new_timetable, new_muted, new_presounds = timetable.getting.get_time(datetime.now())
+    daemon.update(new_timetable, new_muted, new_presounds)
     
     return f'✅ Звонок в {str(hour).zfill(2)}:{str(minutes).zfill(2)} {day}.{month}.{year} будет включён'
 
@@ -429,8 +432,8 @@ def unmute_all(message, daemon: Daemon):
     # Сериализация
     timetable.muting.unmute_all(datetime(year, month, day))
 
-    new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-    daemon.update(new_timetable, new_muted)
+    new_timetable, new_muted, new_presounds = timetable.getting.get_time(datetime.now())
+    daemon.update(new_timetable, new_muted, new_presounds)
 
     return f'✅ Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут включены'
 
@@ -468,8 +471,8 @@ def events_duration(affected_events: EventType, message, daemon: Daemon):
 
     timetable.resizing.resize_events(datetime(year, month, day), affected_events, in_seconds // 60)
 
-    new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-    daemon.update(new_timetable, new_muted)
+    new_timetable, new_muted, new_presounds = timetable.getting.get_time(datetime.now())
+    daemon.update(new_timetable, new_muted, new_presounds)
 
 def push(message, daemon: Daemon):
     args = message.text.split()[1:]
@@ -500,8 +503,8 @@ def push(message, daemon: Daemon):
     res = timetable.adding.add(datetime(year, month, day, ring_h, ring_m))
 
     if not res:
-        new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-        daemon.update(new_timetable, new_muted)
+        new_timetable, new_muted, new_presounds = timetable.getting.get_time(datetime.now())
+        daemon.update(new_timetable, new_muted, new_presounds)
 
     return "✅ Звонок добавлен" if not res else "❌ Такой звонок уже есть"
 
@@ -534,13 +537,13 @@ def pop(message, daemon: Daemon):
     res = timetable.removing.remove(datetime(year, month, day, ring_h, ring_m))
     
     if not res:
-        new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
-        daemon.update(new_timetable, new_sounds)
+        new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
+        daemon.update(new_timetable, new_sounds, new_presounds)
 
     return "✅ Звонок удалён" if not res else "❌ Такого звонка не было"
 
 
-def set_sound(message, daemon: Daemon):
+def set_sound(message, daemon: Daemon, pre: bool):
     args = message.text.split()[1:]
     sound_files = utils.get_sound_file_list()
     print(sound_files)
@@ -556,12 +559,12 @@ def set_sound(message, daemon: Daemon):
             if name not in sound_files: 
                 return f"❌ Мелодия не добавлена на звонок, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound {name}</code> "
 
-            res = timetable.sounds.set_sound_day(datetime(year, month, day), name)
+            res = timetable.sounds.set_sound_day(datetime(year, month, day), name, pre)
             
             if not res:
-                new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
-                daemon.update(new_timetable, new_sounds)
-
+                new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
+                daemon.update(new_timetable, new_sounds, new_presounds)
+            
             return "✅ Мелодия добавлена на звонок" if not res else "❌ Мелодия не добавлена на звонок"
 
         ring_time = args[1].split(':')
@@ -583,11 +586,12 @@ def set_sound(message, daemon: Daemon):
 
             if name not in sound_files: 
                 return f"❌ Мелодия не добавлена на звонок, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound {name}</code> "
-
-            res = timetable.sounds.set_sound_day(datetime(year, month, day), name)
+            
+            res = timetable.sounds.set_sound_day(datetime(year, month, day), name, pre)
+           
             if not res:
-                new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
-                daemon.update(new_timetable, new_sounds)
+                new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
+                daemon.update(new_timetable, new_sounds, new_presounds)
 
             return "✅ Мелодия добавлена на звонок" if not res else "❌ Мелодия не добавлена на звонок"
 
@@ -604,11 +608,11 @@ def set_sound(message, daemon: Daemon):
     if ring_h > 23 or ring_h < 0 or ring_m > 59 or ring_m < 0:
         return "❌ Неверное время" 
 
-    res = timetable.sounds.set_sound(datetime(year, month, day, ring_h, ring_m), name)
+    res = timetable.sounds.set_sound(datetime(year, month, day, ring_h, ring_m), name, pre)
     
     if not res:
-        new_timetable, new_sounds = timetable.getting.get_time(datetime.now())
-        daemon.update(new_timetable, new_sounds)
+        new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
+        daemon.update(new_timetable, new_sounds, new_presounds)
 
     return "✅ Мелодия добавлена на звонок" if not res else "❌ Такого звонка не было"
 
@@ -683,9 +687,10 @@ def upload_sound(bot: TeleBot, message, name: str):
     return "✅ Звуковой файл успешно записан"
 
 def weekly(message):
-    table, sounds = timetable.getting.get_time(datetime.now())
+    table, sounds, presounds = timetable.getting.get_time(datetime.now())
 
     print(sounds)
-    timetable.weekly.set_weekly(table, sounds)
+    print(presounds)
+    timetable.weekly.set_weekly(table, sounds, presounds)
 
     return '✅ Постоянное расписание обновлено'

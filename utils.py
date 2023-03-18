@@ -125,5 +125,5 @@ def load_default_timetable(daemon: daemon.Daemon, only_configuration: bool):
         elif table["format"] == "absolute":
             returned = timetable.middleware.absolute_table_handler(table)
         
-        new_timetable, new_muted = timetable.getting.get_time(datetime.now())
-        daemon.update(new_timetable, new_muted)
+        new_timetable, new_muted, new_presounds = timetable.getting.get_time(datetime.now())
+        daemon.update(new_timetable, new_muted, new_presounds)
