@@ -43,8 +43,8 @@ def init():
         FromDay TEXT DEFAULT "01.09",
         TillDay TEXT  DEFAULT "31.05",
         muted INTEGER DEFAULT 0,
-        sound TEXT DEFAULT "default",
-        presound TEXT DEFAULT "defaultpre",
+        sound TEXT DEFAULT "Default",
+        presound TEXT DEFAULT "Defaultpre",
         PRIMARY KEY(id AUTOINCREMENT)
     ) 
     """)
@@ -65,8 +65,8 @@ def init():
         day INTEGER NOT NULL,
         time TEXT NOT NULL,
         muted INTEGER DEFAULT 0,
-        sound TEXT DEFAULT "default",
-        presound TEXT DEFAULT "defaultpre",
+        sound TEXT DEFAULT "Default",
+        presound TEXT DEFAULT "Defaultpre",
         PRIMARY KEY(id AUTOINCREMENT)
     ) 
     """)
@@ -649,9 +649,9 @@ def get_sounds():
     
     else: ret += f"<b>Нет мелодии по умолчанию</b>\n"
 
-    if 'Predefault' in sounds:
+    if 'Defaultpre' in sounds:
         ret += f"<b>Мелодия предзвонка по умолчанию</b>\n"
-        sounds.remove('Predefault')
+        sounds.remove('Defaultpre')
 
     else: ret += f"<b>Нет мелодии предзвонка по умолчанию</b>\n"
 
