@@ -564,7 +564,10 @@ def set_sound(message, daemon: Daemon, is_preparatory=False):
                 new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
                 daemon.update(new_timetable, new_sounds, new_presounds)
             
-            return "✅ Мелодия добавлена на звонок" if not res else "❌ Мелодия не добавлена на звонок"
+            if not is_preparatory:
+                return "✅ Мелодия добавлена на звонок\n\n❗️ Для установки этой же мелодии на соответствующий предварительный звонок, введите <code>" + message.text.replace('set_sound', 'set_pre_sound') + "</code>" if not res else "❌ Мелодия не добавлена на звонок"
+          
+            else: return "✅ Мелодия добавлена на предварительный звонок" if not res else "❌ Мелодия не добавлена на звонок"
 
         ring_time = args[1].split(':')
         name = ' '.join(args[2:]).strip().capitalize()
@@ -592,7 +595,11 @@ def set_sound(message, daemon: Daemon, is_preparatory=False):
                 new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
                 daemon.update(new_timetable, new_sounds, new_presounds)
 
-            return "✅ Мелодия добавлена на звонок" if not res else "❌ Мелодия не добавлена на звонок"
+            
+            if not is_preparatory:
+                return "✅ Мелодия добавлена на звонок\n\n❗️ Для установки этой же мелодии на соответствующий предварительный звонок, введите <code>" + message.text.replace('set_sound', 'set_pre_sound') + "</code>" if not res else "❌ Мелодия не добавлена на звонок"
+          
+            else: return "✅ Мелодия добавлена на предварительный звонок" if not res else "❌ Мелодия не добавлена на звонок"
 
         name = ' '.join(args[1:]).strip().capitalize()
 
@@ -612,8 +619,11 @@ def set_sound(message, daemon: Daemon, is_preparatory=False):
     if not res:
         new_timetable, new_sounds, new_presounds = timetable.getting.get_time(datetime.now())
         daemon.update(new_timetable, new_sounds, new_presounds)
-
-    return "✅ Мелодия добавлена на звонок" if not res else "❌ Такого звонка не было"
+            
+    if not is_preparatory:
+        return "✅ Мелодия добавлена на звонок\n\n❗️ Для установки этой же мелодии на соответствующий предварительный звонок, введите <code>" + message.text.replace('set_sound', 'set_pre_sound') + "</code>" if not res else "❌ Мелодия не добавлена на звонок"
+    
+    else: return "✅ Мелодия добавлена на предварительный звонок" if not res else "❌ Мелодия не добавлена на звонок"
 
 def get_sounds_last_id():
     sounds = os.listdir(os.path.abspath('sounds'))
@@ -639,9 +649,9 @@ def get_sounds():
     
     else: ret += f"<b>Нет мелодии по умолчанию</b>\n"
 
-    if 'Defaultpre' in sounds:
+    if 'Predefault' in sounds:
         ret += f"<b>Мелодия предзвонка по умолчанию</b>\n"
-        sounds.remove('Defaultpre')
+        sounds.remove('Predefault')
 
     else: ret += f"<b>Нет мелодии предзвонка по умолчанию</b>\n"
 
