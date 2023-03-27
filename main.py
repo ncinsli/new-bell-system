@@ -115,12 +115,26 @@ def admin_rm(message):
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
         bot.reply_to(message, replies.results.access_denied)
 
+@bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/instant_ring' and call.message)
+def instant_ring_confirm(message):
+    duration = configuration.ring_duration
+    sound = 'Default' # Если звук не предоставлен
+    no_duration_state = False # для обработки логики аргументов
+#   print(message)
+#   bot.delete_message(message.chat.id, message.message_id)
+    daemon.instant_ring(duration, sound)
+
 @bot.message_handler(commands=["ring"])
 def ring(message):
     if admins.validator.check(message):
         duration = configuration.ring_duration
         sound = 'Default' # Если звук не предоставлен
         no_duration_state = False # для обработки логики аргументов
+
+        if message.text == '/ring':
+            yes = types.InlineKeyboardButton('Подать звонок', callback_data='/instant_ring')
+            bot.send_message(message.from_user.id, "<b>Вы уверены?</b>", parse_mode='HTML', reply_markup=types.InlineKeyboardMarkup().add(yes))
+            return 
 
         try:
             space_count = message.text.count(" ")
@@ -471,7 +485,7 @@ def upload_default_sound_callback(call):
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/upload_default_pre_sound' and call.message)
 def upload_default_pre_sound_callback(call):
     bot.reply_to(call.message, f'🎵 Отправьте звуковой файл, который будет проигрываться по умолчанию на предварительном звонке', parse_mode='HTML')
-    bot.register_next_step_handler(call.message, get_new_sound, 'defaultpre')
+    bot.register_next_step_handler(call.message, get_new_sound, 'Defaultpre')
     logging.info(f'@{call.message.from_user.username} requested to upload sound file')
 
 @bot.message_handler(commands=["upload_default_sound"])
@@ -485,7 +499,7 @@ def upload_default_sound(message):
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
-def get_new_sound(message, name = 'default'):
+def get_new_sound(message, name = 'Default'):
     res = timetable.middleware.upload_sound(bot, message, name)
     bot.reply_to(message, res)
     logging.info(f'@{message.from_user.username} uploaded sound file ' + name)
@@ -515,7 +529,7 @@ def weekly_ask(message):
 <b>Установить такое расписание 
 на каждый день недели ({timetable.utils.get_weekday_russian(datetime.now())}) ?</b>''', parse_mode='HTML', reply_markup=types.InlineKeyboardMarkup().add(yes))
 
-            logging.info(f'@{message.from_user.username} requested to upload sound file')
+            logging.info(f'@{message.from_user.username} requested to change timetable on this day of week')
     else:
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
@@ -553,4 +567,4 @@ else:
 for owner in configuration.owners:
     admins.edit.append(owner)
 
-bot.infinity_polling()
+bot.infinity_polling(timeout=60)

@@ -13,7 +13,7 @@ try:
     i2c_expander = 'PCF8574'
     cols = 20
     rows = 4
-    port = 3
+    port = 0
     address = 0x27
 
     class Display(threading.Thread):

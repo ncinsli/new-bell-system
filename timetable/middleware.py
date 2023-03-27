@@ -642,7 +642,7 @@ def get_sounds():
     
     for i in range(0, len(sounds)):
         sounds[i] = sounds[i][:-4]
-
+    print(sounds)
     if 'Default' in sounds:
         ret += f"<b>Мелодия по умолчанию</b>\n"
         sounds.remove('Default')
@@ -686,7 +686,7 @@ def upload_sound(bot: TeleBot, message, name: str):
     if file_name is None: return "❌ Ошибка в имени файла!"
     sound_path = f"./sounds/{name.capitalize()}.{file_name[-3:]}"
 
-    if os.path.exists(sound_path) and name != 'default':
+    if os.path.exists(sound_path) and name != 'Default':
         return "❌ Звуковой файл с таким именем уже существует"
     else:
         try:
@@ -704,8 +704,8 @@ def upload_sound(bot: TeleBot, message, name: str):
 def weekly(message):
     table, sounds, presounds = timetable.getting.get_time(datetime.now())
 
-    print(sounds)
-    print(presounds)
-    timetable.weekly.set_weekly(table, sounds, presounds)
+    # print(sounds)
+    # print(presounds)
+    err = timetable.weekly.set_weekly(table, sounds, presounds)
 
-    return '✅ Постоянное расписание обновлено'
+    return '✅ Постоянное расписание обновлено' if not err else '❌  Постоянное расписание не изменилось, потому что сегодняшний день ничем не отличается от постоянного расписания'

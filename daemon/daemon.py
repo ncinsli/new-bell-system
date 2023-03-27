@@ -62,7 +62,8 @@ class Daemon(threading.Thread):
         except: print("[GPIO] .update")
         timetable_str = str(self.today_timetable).replace("'", "")
         logging.info(f'Updated timetable: {timetable_str}')
-        logging.info(f'Updated muted list: {str(self.sounds)}')
+        logging.info(f'Updated sound list: {str(self.sounds)}')
+        logging.info(f'Updated presound list: {str(self.presounds)}')
 
     def run(self):
         while True:
@@ -91,7 +92,9 @@ class Daemon(threading.Thread):
                     try:
                         for id in configuration.debug_info_receivers:
                             self.debugger.send_message(id, '🛎️  Звонок по расписанию успешно подан')
-                    except: logging.error("Unable to notify debug info receivers about the ring")
+                    except Exception as e: 
+                        logging.error("Unable to notify debug info receivers about the ring")
+                        logging.exception(e)
 
                 else:
                     logging.warn(f'No ring (muted)')
@@ -99,7 +102,9 @@ class Daemon(threading.Thread):
                     try:
                         for id in configuration.debug_info_receivers:
                             self.debugger.send_message(id, '🚫 Звонок по расписанию заглушен и не подан')
-                    except: logging.error("Unable to notify debug info receivers about the muted ring")
+                    except Exception as e: 
+                        logging.error("Unable to notify debug info receivers about the muted ring. Error is below")
+                        logging.exception(e)
 
                 tempIdx = self.today_timetable.index(timing)
                 if tempIdx != len(self.today_timetable)-1:
@@ -132,10 +137,10 @@ class Daemon(threading.Thread):
 
                 if self.order % 2 != 0: continue
                 if self.order == 0:
-                    if configuration.first_pre_ring_enabled == False:
+                    if not configuration.first_pre_ring_enabled:
                         continue
                 else:
-                    if configuration.all_pre_rings_enabled == False:
+                    if not configuration.all_pre_rings_enabled:
                         continue
 
                 if self.presounds[self.order] != -1:
@@ -148,7 +153,10 @@ class Daemon(threading.Thread):
                     try:
                         for id in configuration.debug_info_receivers:
                             self.debugger.send_message(id, '🧨  Предзвонок по расписанию успешно подан')
-                    except: logging.error("Unable to notify debug info receivers about pre-ring")
+                   
+                    except Exception as e: 
+                        logging.error("Unable to notify debug info receivers about pre-ring. The exception is below")
+                        logging.exception(e)
 
                     self.last_called_timing = timing
                 else:
@@ -156,15 +164,18 @@ class Daemon(threading.Thread):
                     self.last_called_timing = timing
 
     def instant_ring(self, duration: float, sound = 0):
+        duration = duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration
+
         try:
-            logging.warn(f'Started ring for {duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration} seconds')
+            logging.warn(f'Started ring for {duration} seconds')
             ring_callbacks.ring(sound, duration)
 
             logging.warn(f'Stopped ring')
         
-        except:
-            logging.critical('Unable to ring manually')
-        
+        except Exception as e:
+            logging.critical('Unable to ring manually. The exception is below')
+            logging.exception(e)
+
             try:
                 ring_callbacks.stop_ring()
             except: os.system('reboot')

@@ -1,17 +1,7 @@
-import os
-from pydub import AudioSegment 
-import sqlite3
-import calendar
 import configuration
 import timetable.resizing
 import timetable.middleware
-from daemon.daemon import Daemon
 from datetime import datetime
-from telebot import TeleBot
-from telebot import types
-from timetable.events import EventType
-import logging
-
 
 table_override = configuration.overrided_time_table_name
 table = configuration.time_table_name
@@ -45,7 +35,7 @@ def set_sound(date_time: datetime, name: str, is_preparatory: bool):
             if not is_preparatory:
                 cursor.execute(f"""
                         INSERT INTO {table_override}(year, month, day, time, muted, sound, presound) VALUES(?, ?, ?, ?, ?, ?, ?) 
-                    """, [date_time.year, date_time.month, date_time.day, ring_time, 0, defaults if ring_time.split(':') != [str(date_time.hour).zfill(2), str(date_time.minute).zfill(2)] else name, "defaultpre"])
+                    """, [date_time.year, date_time.month, date_time.day, ring_time, 0, defaults if ring_time.split(':') != [str(date_time.hour).zfill(2), str(date_time.minute).zfill(2)] else name, "Defaultpre"])
             else:
                cursor.execute(f"""
                         INSERT INTO {table_override}(year, month, day, time, muted, sound, presound) VALUES(?, ?, ?, ?, ?, ?, ?) 
@@ -68,7 +58,7 @@ def set_sound(date_time: datetime, name: str, is_preparatory: bool):
 
     return 0
 
-def set_sound_day(date_time: datetime, name: str, pre: bool):
+def set_sound_day(date_time: datetime, name: str, is_preparatory: bool):
     cursor = connection.cursor()
 
     time_str = str(date_time.time())[:5].zfill(5)
@@ -87,17 +77,17 @@ def set_sound_day(date_time: datetime, name: str, pre: bool):
     if len(overrides) == 0:
         # Значит этот день не был особенным, поэтому его надо таковым сделать
         for ring_time in timetable_today:
-            if pre == False:
+            if not is_preparatory:
                 cursor.execute(f"""
                         INSERT INTO {table_override}(year, month, day, time, muted, sound, presound) VALUES(?, ?, ?, ?, ?, ?, ?) 
-                    """, [date_time.year, date_time.month, date_time.day, ring_time, 0, name, "defaultpre"])
+                    """, [date_time.year, date_time.month, date_time.day, ring_time, 0, name, "Defaultpre"])
             else:
                 cursor.execute(f"""
                         INSERT INTO {table_override}(year, month, day, time, muted, sound, presound) VALUES(?, ?, ?, ?, ?, ?, ?) 
-                    """, [date_time.year, date_time.month, date_time.day, ring_time, 0, "default", name])
+                    """, [date_time.year, date_time.month, date_time.day, ring_time, 0, "Default", name])
             connection.commit()
     else:
-        if pre == False:
+        if not is_preparatory:
             cursor.execute(f"""
                     UPDATE {table_override}
                     SET sound=?

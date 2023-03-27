@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 import configuration
 import json
@@ -6,7 +7,9 @@ connection = configuration.connection
 cursor = connection.cursor()
 
 def set_weekly(table, sounds, presounds):
-    #TODO: PRESOUNDS
+    if table == []:
+        return 1
+    
     start = table[0]
     shifts = []
     weekday_json = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")[datetime.now().weekday()]
@@ -18,26 +21,30 @@ def set_weekly(table, sounds, presounds):
 
     for time in table:
         sound = sounds[table.index(time)]
+        presound = presounds[table.index(time)]
 
         cursor.execute(f"""SELECT id FROM {configuration.time_table_name}
             WHERE time="{time}"
         """)
-        occurences = cursor.fetchall()
+        occurencies = cursor.fetchall()
         connection.commit()
 
-        if len(occurences) == 0:
+        if len(occurencies) > 0:
             cursor.execute(f"""UPDATE {configuration.time_table_name}
                 SET {weekday_json}=1,
                 muted={1 if sound == -1 else 0},
-                sound="{sound}"
+                sound="{sound}",
+                presound="{presound}"
                 WHERE time="{time}"
             """)
             connection.commit()
-
-        try:
-            cursor.execute(f"""INSERT INTO {configuration.time_table_name}(time, {weekday_json}, muted, sound) VALUES(?, ?, ?, ?)""", [time, 1, 1 if sound == -1 else 0, sound])
-            connection.commit()
-        except: pass
+        else:
+            try:
+                cursor.execute(f"""INSERT INTO {configuration.time_table_name}(time, {weekday_json}, muted, sound, presound) VALUES(?, ?, ?, ?, ?)""",
+                               [time, 1, 1 if sound == -1 else 0, sound, presound])
+                connection.commit()
+            except Exception as e: 
+                logging.getLogger().exception(e)
 
     for i in range(1, len(table)):
         prev = datetime.strptime(table[i - 1],"%H:%M")
@@ -55,3 +62,4 @@ def set_weekly(table, sounds, presounds):
     with open('timetable.json', 'w') as file:
         file.write(json.dumps(weekly_timetable, indent=4))
 
+    return 0

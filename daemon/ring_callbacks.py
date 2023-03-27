@@ -22,10 +22,11 @@ def load_sound(sound_path: str):
     try:
         sound = AudioSegment.from_file(sound_path, sound_path[-3::])
         sounds[sound_path[(sound_path.rindex('/')+1):-4]] = sound # убирает полный путь и расширение. Итого: просто название песни
-    except:
+    except Exception as e:
         logger.critical("Failed to load sound on path " + sound_path)
+        logger.exception(e)
 
-def ring(sound: string, duration = configuration.ring_duration):
+def ring(sound: string, duration=configuration.ring_duration):
     os.system(f'echo 1 > /sys/class/gpio/gpio{port}/value')
     time.sleep(0.1) # Для передачи системе оповещения тока, который скажет ей включить линейный вход, нужно время
 
@@ -38,6 +39,7 @@ def ring(sound: string, duration = configuration.ring_duration):
 
     except Exception as e:
         logging.getLogger().critical("Unable to start sound ring")
+        logging.getLogger().exception(e)
         time.sleep(duration - 0.1)
         stop_ring()
 

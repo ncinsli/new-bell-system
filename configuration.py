@@ -1,6 +1,6 @@
 import sqlite3
 
-port = 227
+port = 10 # 227
 connection = sqlite3.connect('database.db', check_same_thread=False)
 owners = ['newbell_admin']
 debug_info_receivers = set(['1134602783'])
