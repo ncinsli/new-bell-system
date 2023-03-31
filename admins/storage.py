@@ -1,8 +1,8 @@
 import sqlite3
-import configuration
+from configurations import configuration
+from singletones import connection
 
-connection = configuration.connection
-table = configuration.admin_table_name
+table = configuration.db.admin
 
 def contains(id: str) -> bool:
 

@@ -1,9 +1,9 @@
 import logging
 from datetime import datetime
-import configuration
+from configurations import configuration
+from singletones import connection
 import json
 
-connection = configuration.connection
 cursor = connection.cursor()
 
 def set_weekly(table, sounds, presounds):
@@ -12,39 +12,36 @@ def set_weekly(table, sounds, presounds):
     
     start = table[0]
     shifts = []
-    weekday_json = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")[datetime.now().weekday()]
 
-    cursor.execute(f"""UPDATE {configuration.time_table_name}
-    SET {weekday_json}=0
-    """)
-    connection.commit()
+    weekdays = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+    weekday_json = weekdays[datetime.now().weekday()]
+
+    query = f"""DELETE FROM {configuration.db.main}
+    WHERE {weekday_json}=1"""
+    for i in weekdays:
+        if i != weekday_json:
+            query += "\nAND " + i + '=0'
+    
+    try: 
+        cursor.execute(query)
+        connection.commit()
+    except: pass
 
     for time in table:
+
+        cursor.execute(f"""UPDATE {configuration.db.main}
+        SET {weekday_json}=0
+        WHERE time="{time}"
+        """)
+
+        connection.commit()
+
         sound = sounds[table.index(time)]
         presound = presounds[table.index(time)]
 
-        cursor.execute(f"""SELECT id FROM {configuration.time_table_name}
-            WHERE time="{time}"
-        """)
-        occurencies = cursor.fetchall()
+        cursor.execute(f"""INSERT INTO {configuration.db.main}(time, {weekday_json}, muted, sound, presound) VALUES(?, ?, ?, ?, ?)""",
+                        [time, 1, 1 if sound == -1 else 0, sound, presound])
         connection.commit()
-
-        if len(occurencies) > 0:
-            cursor.execute(f"""UPDATE {configuration.time_table_name}
-                SET {weekday_json}=1,
-                muted={1 if sound == -1 else 0},
-                sound="{sound}",
-                presound="{presound}"
-                WHERE time="{time}"
-            """)
-            connection.commit()
-        else:
-            try:
-                cursor.execute(f"""INSERT INTO {configuration.time_table_name}(time, {weekday_json}, muted, sound, presound) VALUES(?, ?, ?, ?, ?)""",
-                               [time, 1, 1 if sound == -1 else 0, sound, presound])
-                connection.commit()
-            except Exception as e: 
-                logging.getLogger().exception(e)
 
     for i in range(1, len(table)):
         prev = datetime.strptime(table[i - 1],"%H:%M")
@@ -56,8 +53,11 @@ def set_weekly(table, sounds, presounds):
         weekly_timetable = json.load(file)
 
     weekly_timetable[weekday_json]["firstBell"] = table[0]
-    for i in range(0, len(shifts)):
+    for i in range(0, len(weekly_timetable[weekday_json]["shifts"])):
         weekly_timetable[weekday_json]["shifts"][i] = shifts[i]
+
+    for i in range(len(weekly_timetable[weekday_json]["shifts"]), len(shifts)):
+        weekly_timetable[weekday_json]["shifts"].append(shifts[i])
 
     with open('timetable.json', 'w') as file:
         file.write(json.dumps(weekly_timetable, indent=4))

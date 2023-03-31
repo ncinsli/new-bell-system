@@ -5,7 +5,7 @@ try:
     import os
     import time
     import timetable.utils as utils
-    import configuration
+    from configurations import configuration
 
     # lcd options
     lcdmode = 'i2c'

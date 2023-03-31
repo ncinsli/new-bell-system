@@ -1,9 +1,9 @@
-import configuration
+from configurations import configuration
+from singletones import connection
 # Will be deprecated soon
 
-table_override = configuration.overrided_time_table_name
-table = configuration.time_table_name
-connection = configuration.connection
+table_override = configuration.db.overrided
+table = configuration.db.main
 
 def add_default_bells(con, cursor, time, m, t = 0, w = 0, th = 0, f = 0, s = 0, su = 0):
     cursor.execute(f"""

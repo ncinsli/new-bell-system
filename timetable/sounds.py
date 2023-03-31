@@ -1,11 +1,11 @@
-import configuration
+from configurations import configuration
 import timetable.resizing
 import timetable.middleware
 from datetime import datetime
+from singletones import connection
 
-table_override = configuration.overrided_time_table_name
-table = configuration.time_table_name
-connection = configuration.connection
+table_override = configuration.db.overrided
+table = configuration.db.main
 
 def set_sound(date_time: datetime, name: str, is_preparatory: bool):
     cursor = connection.cursor()

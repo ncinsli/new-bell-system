@@ -2,13 +2,13 @@ from timetable.events import EventType
 from datetime import datetime
 import timetable.utils
 import timetable.getting
-import configuration
+from configurations import configuration
+from singletones import connection
 import calendar
 import sqlite3
 
-connection = configuration.connection
-table = 'bells'
-table_override = 'bell_overrides'
+table_override = configuration.db.overrided
+table = configuration.db.main
 
 def resize(date: datetime, event: EventType, order: int, seconds: int): # -> UserStorage
     cursor = connection.cursor()

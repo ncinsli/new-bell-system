@@ -13,10 +13,11 @@ from telebot import *
 from datetime import datetime
 from daemon.daemon import Daemon
 from datetime import datetime, timedelta
-import configuration
+from configurations import configuration
 import replies.format_tip, replies.results
 import utils
 
+from singletones import connection
 import admins.edit
 import admins.storage
 import admins.validator
@@ -43,9 +44,6 @@ logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler(log_filena
 token = os.environ["TOKEN"]
 bot = TeleBot(token)
 bot.parse_mode = 'html'
-
-connection = configuration.connection
-cursor = connection.cursor()
 
 timetable.middleware.init()
 admins.middleware.init()
@@ -76,6 +74,7 @@ def exec(message):
 def set_status(message):
     if (admins.validator.check(message)):
         configuration.status = message.text[12:]
+        configuration.save()
 #       print(overAllStatus)
 #       print(subprocess.check_output(message.text[5:].split()))
         logging.info(f'@{message.from_user.username} set status to: {configuration.status}')
@@ -263,14 +262,14 @@ def shift(message):
         bot.reply_to(message, replies.results.access_denied)
 
 
-@bot.message_handler(commands=["pre_ring_edit"])
-def pre_ring_edit(message):
+@bot.message_handler(commands=["set_interval"])
+def set_interval(message):
     if (admins.validator.check(message)):
         if ' ' not in message.text:
-            bot.reply_to(message, replies.format_tip.pre_ring_edit)
+            bot.reply_to(message, replies.format_tip.set_interval)
             logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: incorrect format')
         else:
-            res = timetable.middleware.pre_ring_edit(message)
+            res = timetable.middleware.set_interval(message)
 
             logging.info(f'@{message.from_user.username} edited pre-ring interval ({message.text})')
     else:
@@ -456,6 +455,7 @@ def upload_sound_callback_file(message, file):
         bot.reply_to(message, "Недопустимое название аудиозаписи!")
     except:
         res = timetable.middleware.upload_sound(bot, file, message.text)
+
         bot.reply_to(message, res)
         logging.info(f'@{message.from_user.username} uploaded sound file ' + message.text)
 
@@ -465,7 +465,6 @@ def upload_sound(message):
         if len(message.text.split()) == 1:
             bot.reply_to(message, replies.format_tip.upload_sound)
             return
-
         else:
             name = ' '.join(message.text.split()[1:]).capitalize()
             bot.register_next_step_handler(message, get_new_sound, name)
@@ -500,8 +499,11 @@ def upload_default_sound(message):
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 def get_new_sound(message, name = 'Default'):
+    promise_id = bot.send_message(message.from_user.id, '🕑 Аудиозапись обрабатывается').id
+
     res = timetable.middleware.upload_sound(bot, message, name)
-    bot.reply_to(message, res)
+
+    bot.edit_message_text(res, message.chat.id, promise_id)
     logging.info(f'@{message.from_user.username} uploaded sound file ' + name)
 
 @bot.message_handler(commands=["sounds"])
@@ -564,7 +566,7 @@ else:
     try: utils.load_default_timetable(daemon, True) 
     except: pass
 
-for owner in configuration.owners:
+for owner in configuration.privileges.owners:
     admins.edit.append(owner)
 
 bot.infinity_polling(timeout=60)

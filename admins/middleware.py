@@ -1,11 +1,11 @@
 import logging
 import admins.edit, admins.storage, admins.validator 
-from telebot import *
-import configuration
+from telebot import TeleBot
+from configurations import configuration
+from singletones import connection
 
-connection = configuration.connection
 cursor = connection.cursor()
-table = configuration.admin_table_name
+table = configuration.db.admin
 
 def init():
     cursor.execute(f"""
@@ -19,8 +19,7 @@ def init():
 def add(message):
     if ' ' not in message.text:
         logging.getLogger().error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}: invalid format')
-        bot.reply_to(message, 'Если Вы хотите добавить администратора, Вы должны указать его имя пользователя или Telegram ID')
-        return
+        return '❌ Если Вы хотите добавить администратора, Вы должны указать его имя пользователя или Telegram ID'
     
     target = message.text.split()[1].replace('@', '')
 

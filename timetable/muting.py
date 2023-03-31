@@ -5,11 +5,11 @@ import timetable.muting
 import timetable.shifting
 from datetime import datetime
 import timetable.middleware
-import configuration
+from configurations import configuration
+from singletones import connection
 
-table_override = configuration.overrided_time_table_name
-table = configuration.time_table_name
-connection = configuration.connection
+table_override = configuration.db.overrided
+table = configuration.db.main
 cursor = connection.cursor()
 
 def mute(date_time: datetime):

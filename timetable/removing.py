@@ -1,14 +1,13 @@
 import sqlite3
 import calendar
-import configuration
+from configurations import configuration
 import timetable.resizing
 from datetime import datetime
 from timetable.events import EventType
+from singletones import connection
 
-
-table_override = configuration.overrided_time_table_name
-table = configuration.time_table_name
-connection = configuration.connection
+table_override = configuration.db.overrided
+table = configuration.db.main
 
 def remove(date_time: datetime):
     cursor = connection.cursor()
@@ -30,7 +29,6 @@ def remove(date_time: datetime):
 
     if len(overrides) == 0:
         # Значит этот день не был особенным, поэтому и удалять то нечего
-        timetable_today.append(time_str)
 
         for ring_time in timetable_today:
             # Мелодия не копируется, потому что звонок все равно будет удален

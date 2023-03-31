@@ -1,5 +1,5 @@
 from datetime import datetime
-import configuration
+from configurations import configuration
 import subprocess
 import daemon.daemon as daemon
 import timetable.utils
@@ -80,14 +80,16 @@ def get_state_reply(daemon: daemon.Daemon) -> str:
     ans += f'''
 
 ⚙️ Конфигурация
-Интервал предварительного звонка: за {configuration.pre_ring_delta // 60} мин до основного
-Длина звонка: {configuration.ring_duration} с
-Длина предварительного звонка: {configuration.pre_ring_duration} с
+Интервал предварительного звонка: за {configuration.rings.interval} мин до основного
+Длина звонка: {configuration.rings.main} с
+Длина предварительного звонка: {configuration.rings.preparatory} с
 
 💾 Система
 Аптайм: {get_uptime()}
 Температура: {get_cpu_temp()}°С
-Статус: {configuration.status}
+
+📟 Статус
+{configuration.status}
 '''
     return ans
 
@@ -107,12 +109,12 @@ def load_default_timetable(daemon: daemon.Daemon, configuration_only=False):
         if "format" not in table:
             pass
 
-        old_configuration = [configuration.pre_ring_delta, 
-            configuration.ring_duration, 
-            configuration.max_ring_duration,
-            configuration.pre_ring_duration,
-            configuration.first_pre_ring_enabled,
-            configuration.all_pre_rings_enabled]
+        old_configuration = [configuration.rings.interval, 
+            configuration.rings.main, 
+            configuration.rings.maximum,
+            configuration.rings.preparatory,
+            configuration.rings.first_preparatory_enabled,
+            configuration.rings.preparatory_enabled]
 
         if "configuration" in table:
             ret = timetable.middleware.rings_configuration_handler(table["configuration"]) # прогружает вкладку configuration, переписывает переменные configuration.py по имеющимся в timetable.json данным

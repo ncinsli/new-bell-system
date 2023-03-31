@@ -19,14 +19,14 @@ import timetable.overrides
 import timetable.utils as utils
 from timetable.events import EventType
 import timetable.timetable_defaultvalues as setup
-import configuration
+from configurations import configuration
+from singletones import connection
 
 
 INCORRECT_FORMAT_ERROR = "❌ Ошибка при чтении файла. Неверный формат"
-connection = configuration.connection
 cursor = connection.cursor()
-table = configuration.time_table_name
-table_override = configuration.overrided_time_table_name
+table_override = configuration.db.overrided
+table = configuration.db.main
 
 def init():
     cursor.execute(f"""
@@ -437,13 +437,14 @@ def unmute_all(message, daemon: Daemon):
 
     return f'✅ Все звонки {str(day).zfill(2)}.{str(month).zfill(2)}.{year} будут включены'
 
-def pre_ring_edit(message):
+def set_interval(message):
     args = message.text.split()[1:]
     delta_min = int(args[0])
 
     if delta_min <= 0: return
     
-    configuration.pre_ring_delta = delta_min * 60
+    configuration.rings.interval = delta_min
+    configuration.save()
     return f'✅ Интервал изменён на {delta_min} минут'
 
 def events_duration(affected_events: EventType, message, daemon: Daemon):

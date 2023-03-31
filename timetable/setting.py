@@ -1,9 +1,9 @@
 import sqlite3
-import configuration
+from configurations import configuration
+from singletones import connection
 
-table_override = configuration.overrided_time_table_name
-table = configuration.time_table_name
-connection = configuration.connection
+table_override = configuration.db.overrided
+table = configuration.db.main
 
 def set_time(items):
     cursor = connection.cursor()

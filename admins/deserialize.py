@@ -1,9 +1,9 @@
 import sqlite3
-import configuration
+from configurations import configuration
+from singletones import connection 
 
-table = configuration.time_table_name
-table_override = configuration.overrided_time_table_name
-connection = configuration.connection
+table = configuration.db.main
+table_override = configuration.db.overrided
 
 def deserialize() -> object:
     cursor = connection.cursor()

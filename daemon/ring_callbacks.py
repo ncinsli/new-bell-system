@@ -3,9 +3,9 @@ from telebot import *
 import datetime
 from pydub import AudioSegment, playback
 import logging 
-import configuration
+from configurations import configuration
 
-port = configuration.port
+port = configuration.daemon.port
 sounds = {}
 
 def init():
@@ -26,7 +26,7 @@ def load_sound(sound_path: str):
         logger.critical("Failed to load sound on path " + sound_path)
         logger.exception(e)
 
-def ring(sound: string, duration=configuration.ring_duration):
+def ring(sound: string, duration=configuration.rings.default):
     os.system(f'echo 1 > /sys/class/gpio/gpio{port}/value')
     time.sleep(0.1) # Для передачи системе оповещения тока, который скажет ей включить линейный вход, нужно время
 

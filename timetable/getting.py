@@ -1,19 +1,14 @@
 from datetime import datetime
 import calendar
-import configuration
+from configurations import configuration
+from singletones import connection
 import sqlite3 
 
-connection = configuration.connection
-table = configuration.time_table_name
-table_override = configuration.overrided_time_table_name
-
-def get_time(date: datetime):
-    
+def get_time(date: datetime):    
     cursor = connection.cursor()
-
     cursor.execute(f"""
         SELECT time, muted, sound, presound
-        FROM {table_override}
+        FROM {configuration.db.overrided}
         WHERE day={date.day} 
               AND month={date.month}
               AND year={date.year}
@@ -28,7 +23,7 @@ def get_time(date: datetime):
         columnName = calendar.day_name[date.weekday()].capitalize()
         cursor.execute(f"""
             SELECT time, muted, sound, presound
-            FROM {table}
+            FROM {configuration.db.main}
             WHERE {columnName}=1
             ORDER BY time
         """)

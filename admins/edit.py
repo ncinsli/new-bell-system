@@ -1,10 +1,10 @@
 import os
 import sqlite3
-import configuration
+from configurations import configuration
+from singletones import connection
 from admins.status_codes import AppendAdminStatus, DeleteAdminStatus
 
-connection = configuration.connection
-table = configuration.admin_table_name
+table = configuration.db.admin
 
 def append(id: str) -> AppendAdminStatus: # -> UserStorage
     id = str(id).replace('@', '').lower()

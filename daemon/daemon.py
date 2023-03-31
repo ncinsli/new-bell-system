@@ -12,7 +12,7 @@ import daemon.utils as utils
 import telebot
 import time
 import timetable.utils
-import configuration
+from configurations import configuration
 from datetime import datetime
 import daemon.ring_callbacks as ring_callbacks
 
@@ -36,7 +36,7 @@ class Daemon(threading.Thread):
         self.update(table, muted, presounds)
         self.day = datetime.now().day
         
-        if (os.system(f'echo 1 > /sys/class/gpio{configuration.port}/value && echo 0 > /sys/class/gpio{configuration.port}/value') == 0):
+        if (os.system(f'echo 1 > /sys/class/gpio{configuration.daemon.port}/value && echo 0 > /sys/class/gpio{configuration.daemon.port}/value') == 0):
             self.gpio_mode = True
 
         logging.info(f'GPIO_MODE: {self.gpio_mode}')
@@ -67,9 +67,9 @@ class Daemon(threading.Thread):
 
     def run(self):
         while True:
-            time.sleep(configuration.daemon_delay_time)
+            time.sleep(configuration.daemon.delay)
             timing = str(datetime.now().time())[:5]
-            timing_forward = timetable.utils.sum_times(timing, configuration.pre_ring_delta)
+            timing_forward = timetable.utils.sum_times(timing, configuration.rings.interval * 60)
 
             if (timing == '00:00' and datetime.now().day != self.day): 
                 self.update(*timetable.getting.get_time(datetime.now()))
@@ -82,15 +82,15 @@ class Daemon(threading.Thread):
                 logging.info(f'It is an event: order is now {self.order}')
 
                 if self.sounds[self.order] != -1:
-                    logging.warn(f'Started ring for {configuration.ring_duration} seconds | Melody {self.sounds[self.order]}')
+                    logging.warn(f'Started ring for {configuration.rings.main} seconds | Melody {self.sounds[self.order]}')
                     
-                    ring_callbacks.ring(self.sounds[self.order], configuration.ring_duration)
+                    ring_callbacks.ring(self.sounds[self.order], configuration.rings.main)
                     logging.warn(f'Stopped ring')
 
                     self.last_called_timing = timing
 
                     try:
-                        for id in configuration.debug_info_receivers:
+                        for id in configuration.privileges.receivers:
                             self.debugger.send_message(id, '🛎️  Звонок по расписанию успешно подан')
                     except Exception as e: 
                         logging.error("Unable to notify debug info receivers about the ring")
@@ -100,7 +100,7 @@ class Daemon(threading.Thread):
                     logging.warn(f'No ring (muted)')
                     self.last_called_timing = timing
                     try:
-                        for id in configuration.debug_info_receivers:
+                        for id in configuration.privileges.receivers:
                             self.debugger.send_message(id, '🚫 Звонок по расписанию заглушен и не подан')
                     except Exception as e: 
                         logging.error("Unable to notify debug info receivers about the muted ring. Error is below")
@@ -122,7 +122,7 @@ class Daemon(threading.Thread):
                     logging.warn(f'No more rings')
                 
                     try:
-                        for id in configuration.debug_info_receivers:
+                        for id in configuration.privileges.receivers:
                             self.debugger.send_message(id, '⏰ Сегодня больше нет звонков')
                     except: logging.error("Unable to notify debug info receivers about the ending of all rings")
 
@@ -137,21 +137,21 @@ class Daemon(threading.Thread):
 
                 if self.order % 2 != 0: continue
                 if self.order == 0:
-                    if not configuration.first_pre_ring_enabled:
+                    if not configuration.rings.first_preparatory_enabled:
                         continue
                 else:
-                    if not configuration.all_pre_rings_enabled:
+                    if not configuration.rings.preparatory_enabled:
                         continue
 
                 if self.presounds[self.order] != -1:
-                    logging.warn(f'Started pre-ring for {configuration.pre_ring_duration} seconds')
+                    logging.warn(f'Started pre-ring for {configuration.rings.preparatory} seconds')
 
-                    ring_callbacks.ring(self.presounds[self.order], configuration.pre_ring_duration)
+                    ring_callbacks.ring(self.presounds[self.order], configuration.rings.preparatory)
                     
                     logging.warn(f'Stopped pre-ring')
 
                     try:
-                        for id in configuration.debug_info_receivers:
+                        for id in configuration.privileges.receivers:
                             self.debugger.send_message(id, '🧨  Предзвонок по расписанию успешно подан')
                    
                     except Exception as e: 
@@ -164,7 +164,7 @@ class Daemon(threading.Thread):
                     self.last_called_timing = timing
 
     def instant_ring(self, duration: float, sound = 0):
-        duration = duration if duration <= configuration.max_ring_duration else configuration.max_ring_duration
+        duration = duration if duration <= configuration.rings.maximum else configuration.maximum
 
         try:
             logging.warn(f'Started ring for {duration} seconds')
