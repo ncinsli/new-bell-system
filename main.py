@@ -126,7 +126,7 @@ def instant_ring_confirm(message):
 @bot.message_handler(commands=["ring"])
 def ring(message):
     if admins.validator.check(message):
-        duration = configuration.ring_duration
+        duration = configuration.rings.main
         sound = 'Default' # Если звук не предоставлен
         no_duration_state = False # для обработки логики аргументов
 
@@ -541,6 +541,34 @@ def weekly(message):
     res = timetable.middleware.weekly(message)
     # utils.load_default_timetable(daemon)
     bot.send_message(message.from_user.id, res)
+
+@bot.message_handler(commands=["set_ring_length"])
+def set_ring_duration(message):
+    if (admins.validator.check(message)):
+        length = int(message.text.split()[1])
+        if length <= 0: bot.send_message(message.from_user.id, '❌ Длина звонка не может быть меньше или равной нулю') 
+        else: 
+            configuration.rings.main = length
+            configuration.rings.maximum = configuration.rings.maximum if configuration.rings.maximum > length else length
+            configuration.save()
+            bot.send_message(message.from_user.id, '✅ Длина звонков успешно изменена')
+    else:
+        bot.reply_to(message, replies.results.access_denied)
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.message_handler(commands=["set_pre_ring_length"])
+def set_pre_ring_duration(message):
+    if (admins.validator.check(message)):
+        length = int(message.text.split()[1])
+        if length <= 0: bot.send_message(message.from_user.id, '❌ Длина предварительного звонка не может быть меньше или равной нулю') 
+        else: 
+            configuration.rings.preparatory = length
+            configuration.rings.maximum = configuration.rings.maximum if configuration.rings.maximum > length else length
+            configuration.save()
+            bot.send_message(message.from_user.id, '✅ Длина предварительных звонков успешно изменена')
+    else:
+        bot.reply_to(message, replies.results.access_denied)
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 print(f"[MAIN] Let's go!")
 daemon.start()
