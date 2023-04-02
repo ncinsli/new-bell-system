@@ -7,6 +7,7 @@ import timetable.middleware
 import os
 import logging
 import json
+import toml
 
 def get_cpu_temp():
     try:
@@ -108,19 +109,12 @@ def load_default_timetable(daemon: daemon.Daemon, configuration_only=False):
         
         if "format" not in table:
             pass
-
-        old_configuration = [configuration.rings.interval, 
-            configuration.rings.main, 
-            configuration.rings.maximum,
-            configuration.rings.preparatory,
-            configuration.rings.first_preparatory_enabled,
-            configuration.rings.preparatory_enabled]
+        old_cfg = configuration.get_instance()
 
         if "configuration" in table:
             ret = timetable.middleware.rings_configuration_handler(table["configuration"]) # прогружает вкладку configuration, переписывает переменные configuration.py по имеющимся в timetable.json данным
             if ret != 0:
-                configuration.reset_configuration(old_configuration)
-
+                configuration.set(old_cfg)
         if configuration_only: return
 
         if table["format"] == "shift":

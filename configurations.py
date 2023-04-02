@@ -1,4 +1,5 @@
 import os
+import copy
 import toml
 from datetime import datetime
 
@@ -23,6 +24,7 @@ class RingTimingConfiguration:
 
 class DisplayConfiguration:
     delay : int = 3
+    port: int = 3
 
 class DaemonConfiguration:
     delay : int = 1
@@ -61,6 +63,7 @@ class Configuration:
         self.rings.default = parsed['Rings']['default']
 
         self.display.delay = parsed['Display']['delay']
+        self.display.port = parsed['Display']['port']
         self.daemon.delay = parsed['Daemon']['delay']
 
         self.status = parsed['Misc']['status']
@@ -86,6 +89,7 @@ class Configuration:
         parsed['Rings']['default'] = self.rings.default
 
         parsed['Display']['delay'] = self.display.delay
+        parsed['Display']['port'] = self.display.port
         parsed['Daemon']['delay'] = self.daemon.delay
 
         parsed['Misc']['status'] = self.status
@@ -95,29 +99,33 @@ class Configuration:
     def save(self):
         with open('configuration.toml', 'w', encoding='utf-8') as f:
             toml.dump(configuration.to_dict(), f)
+    def get_instance(self):
+        return copy.deepcopy(self)
+    def set(self, instance):
+        self.daemon.port = instance.daemon.port
+        self.privileges.owners = instance.privileges.owners
+        self.privileges.receivers = instance.privileges.receivers
+        
+        self.db.main = instance.db.main
+        self.db.overrided = instance.db.overrided
+        self.db.admin = instance.db.admin
 
+        self.rings.main = instance.rings.main
+        self.rings.maximum = instance.rings.maximum
+        self.rings.preparatory = instance.rings.preparatory
+        self.rings.interval = instance.rings.interval
+        self.rings.first_preparatory_enabled = instance.rings.first_preparatory_enabled
+        self.rings.preparatory_enabled = instance.rings.preparatory_enabled
+        self.rings.default = instance.rings.default
+
+        self.display.delay = instance.display.delay
+        self.display.port = instance.display.port
+        self.daemon.delay = instance.daemon.delay
+
+        self.status = instance.status
 
 if os.path.exists('configuration.toml'):
     configuration = Configuration(toml.load('configuration.toml'))
 else:
     configuration = Configuration()
     configuration.save()
-
-def reset_configuration(cfg): # вызывается в middleware /set_Ringstable. В случае, если в Ringstable.json не были указаны эти данные.
-    global interval, length, max_ring_duration, preparatory_ring_duration, first_pre_ring_enabled, all_pre_ring_enabled
-    interval = cfg[0]
-    length = cfg[1]
-    lengthtion = cfg[2]
-    preparatory_length = cfg[3]
-    first_pre_ring_enabled = cfg[4]
-    all_pre_ring_enabled = cfg[5]
-    
-
-def default_configuration():
-    global interval, length, max_ring_duration, preparatory_ring_duration, first_pre_ring_enabled, all_pre_ring_enabled
-    interval = 120
-    length = 3
-    lengthtion = 4
-    preparatory_length = 1
-    first_pre_ring_enabled = True
-    all_pre_ring_enabled = True

@@ -4,6 +4,7 @@ from daemon.daemon import Daemon
 from datetime import datetime, timedelta
 
 import json
+import toml
 import daemon.ring_callbacks
 import timetable.resizing
 import os
@@ -135,17 +136,12 @@ def set_time(bot: TeleBot, message, daemon: Daemon):
     if "format" not in table:
         return INCORRECT_FORMAT_ERROR
 
-    old_configuration = [configuration.pre_ring_delta, 
-        configuration.ring_duration, 
-        configuration.max_ring_duration,
-        configuration.pre_ring_duration,
-        configuration.first_pre_ring_enabled,
-        configuration.all_pre_rings_enabled]
+    cfg_old = configuration.get_instance()
 
     if "configuration" in table:
         ret = rings_configuration_handler(table["configuration"]) # прогружает вкладку configuration, переписывает переменные configuration.py по имеющимся в timetable.json данным
         if ret != 0:
-            configuration.reset_configuration(old_configuration)
+            configuration.set(cfg_old)
             return INCORRECT_FORMAT_ERROR
 
     if table["format"] == "shift":
@@ -163,11 +159,12 @@ def set_time(bot: TeleBot, message, daemon: Daemon):
     return returned
 
 def rings_configuration_handler(cfg):
+    cfg_edit = configuration.get_instance()
     if "preBellTime" in cfg:
         try: 
             preBellTime = utils.time_literals_to_seconds(cfg["preBellTime"])
             if preBellTime != "":
-                configuration.pre_ring_delta = preBellTime 
+               cfg_edit.rings.interval = preBellTime 
             else:
                 return INCORRECT_FORMAT_ERROR
         except: return INCORRECT_FORMAT_ERROR
@@ -176,7 +173,7 @@ def rings_configuration_handler(cfg):
         try: 
             ringDuration = utils.time_literals_to_seconds(cfg["ringDuration"])
             if ringDuration != "":
-                configuration.ring_duration = ringDuration
+                cfg_edit.rings.main = ringDuration
             else:
                 return INCORRECT_FORMAT_ERROR
         except: return INCORRECT_FORMAT_ERROR
@@ -185,17 +182,18 @@ def rings_configuration_handler(cfg):
         try: 
             preRingDuration = utils.time_literals_to_seconds(cfg["preRingDuration"])
             if preRingDuration != "":
-                configuration.pre_ring_duration = preRingDuration
+                cfg_edit.rings.preparatory = preRingDuration
             else:
                 return INCORRECT_FORMAT_ERROR
         except: return INCORRECT_FORMAT_ERROR
     
     if "firstPreRingEnabled" in cfg:
-        try: configuration.first_pre_ring_enabled = cfg["firstPreRingEnabled"] 
+        try: cfg_edit.rings.first_preparatory_enabled = cfg["firstPreRingEnabled"] 
         except: return INCORRECT_FORMAT_ERROR
     if "allPreRingsEnabled" in cfg:
-        try: configuration.all_pre_rings_enabled = cfg["allPreRingsEnabled"] 
+        try: cfg_edit.rings.preparatory_enabled = cfg["allPreRingsEnabled"] 
         except: return INCORRECT_FORMAT_ERROR
+    configuration.set(cfg_edit)
     return 0
 
 def shift_table_handler(table):

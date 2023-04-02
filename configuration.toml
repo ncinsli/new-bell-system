@@ -21,6 +21,7 @@ receivers = [ "1134602783",]
 
 [Display]
 delay = 3
+port = 3
 
 [Daemon]
 delay = 1

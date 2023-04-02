@@ -561,11 +561,6 @@ if database_exists == False:
         print(e)
         logging.info('No .json file, using default configs which may not be precisient')
 
-# TODO: придумать нормальное решение для загузки configuration значений
-else:
-    try: utils.load_default_timetable(daemon, True) 
-    except: pass
-
 for owner in configuration.privileges.owners:
     admins.edit.append(owner)
 
