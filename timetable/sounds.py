@@ -28,7 +28,9 @@ def set_sound(date_time: datetime, name: str, is_preparatory: bool):
         for ring_time in timetable_today:
             cursor.execute(f"""SELECT {'sound' if not is_preparatory else 'presound'} FROM {table} WHERE time="{str(date_time.hour).zfill(2)}:{str(date_time.minute).zfill(2)}"
             """)
-
+            
+            if cursor.fetchone() == None:
+                return 1
             defaults = cursor.fetchone()[0]
             connection.commit()
             
