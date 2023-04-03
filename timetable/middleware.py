@@ -82,7 +82,10 @@ def get_time_raw(date: datetime):
         if i % 2 == 0:
             to_append = ('🔇' if sounds[i] == -1 else '') + '<b>• ' + list_db[i] + ' — ' + list_db[i + 1] + '</b>' + ('🔇' if sounds[i + 1] == -1 else '')
         else: to_append = '   ' + ('🔇' if sounds[i] == -1 else '') + list_db[i] + ' — ' + list_db[i + 1] + ('🔇' if sounds[i + 1] == -1 else '')
-
+        
+        if list_db[i] == list_db[i+1]:
+            to_append = ""
+        
         combined.append(to_append)
 
     return (' ' * 4 + '\n').join(combined) if combined != [] else '<b>На этот день нет расписания звонков</b>'
@@ -200,6 +203,8 @@ def shift_table_handler(table):
     bells = ['08:30', '08:50', '09:00', '09:15', '09:35', '09:45', '09:25', '09:55', '10:10', '10:30', '10:40', '10:20', '10:50', '11:05', '11:35', '11:25', '11:45', '11:55', '12:10', '12:40', '12:30', '12:50', '13:00', '13:15', '13:35', '13:45', '13:25', '13:55', '14:10', '14:30', '14:40', '14:15', '14:50', '15:00', '15:25', '15:35']
     pre_db = dict.fromkeys(bells)
 
+    override_pre_db = [] # для exceptions
+
     for day in ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'):
         if "enable" in table[day]:
             if not table[day]["enable"]:
@@ -225,10 +230,12 @@ def shift_table_handler(table):
 
         if "shifts" in table[day]:
             for b in table[day]["shifts"]:
-                if type(b) != type(0):
+                if type(b) != type(0) and b.lower() != "seq":
                     return INCORRECT_FORMAT_ERROR
             last = firstBell
             for b in table[day]["shifts"]:
+                if type(b) == type("") and b.lower() == "seq":
+                    b = 0
                 last = utils.sum_times(last, b*60)
                 if last not in pre_db.keys():
                     pre_db[last] = [day]
@@ -240,16 +247,25 @@ def shift_table_handler(table):
         else:
             return INCORRECT_FORMAT_ERROR
 
+        if "exceptions" in table[day]:
+            ret = table_exceptions_handler(table[day]["exceptions"], pre_db, override_pre_db, day)
+            if ret == INCORRECT_FORMAT_ERROR:
+                return ret
+
+
     pre_db_items = sorted(list(map(lambda e: (e[0].zfill(5), e[1]), pre_db.items())))
 
     timetable.overrides.delete_all()
     timetable.setting.set_time(dict(pre_db_items))
+    timetable.setting.append_exceptions(override_pre_db)
 
     return "✅ Расписание успешно перезаписано"
 
 def absolute_table_handler(table):
     bells = ['08:30', '08:50', '09:00', '09:15', '09:35', '09:45', '09:25', '09:55', '10:10', '10:30', '10:40', '10:20', '10:50', '11:05', '11:35', '11:25', '11:45', '11:55', '12:10', '12:40', '12:30', '12:50', '13:00', '13:15', '13:35', '13:45', '13:25', '13:55', '14:10', '14:30', '14:40', '14:15', '14:50', '15:00', '15:25', '15:35']
     pre_db = dict.fromkeys(bells)
+
+    override_pre_db = [] # для exceptions
 
     for day in ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'):
         if "enable" in table[day]:
@@ -268,11 +284,52 @@ def absolute_table_handler(table):
                         pre_db[a] = [day]
         else:
             return INCORRECT_FORMAT_ERROR
+        
+        if "exceptions" in table[day]:
+            ret = table_exceptions_handler(table[day]["exceptions"], pre_db, override_pre_db, day)
+            if ret == INCORRECT_FORMAT_ERROR:
+                return ret
 
     timetable.overrides.delete_overrides()
     timetable.setting.set_time(dict(sorted(pre_db.items())))
+    timetable.setting.append_exceptions(override_pre_db)
 
     return "✅ Расписание успешно перезаписано"
+
+def table_exceptions_handler(exceptions, pre_db, override_pre_db, day): # обрабатывает исключения(не программные) в расписании
+    for e in exceptions:
+        if "time" not in e:
+            return INCORRECT_FORMAT_ERROR, INCORRECT_FORMAT_ERROR
+        e["time"] = e["time"].zfill(2)
+        
+        for i in range(len(pre_db[e["time"]])):
+            if pre_db[e["time"]][i] == day:
+                del pre_db[e["time"]][i]
+                break
+
+        e["day"] = day
+        override_pre_db.append(e)
+
+def split(time_split):
+    # TODO: проверка правильная ли дата!!
+    if len(time_split) > 1:
+        check_time = " ".join(time_split)
+    else:
+        check_time = " ".join([datetime.now().strftime("%d:%m:%Y"), time_split[0]])
+
+    check_time = datetime.strptime(check_time, "%d:%m:%Y %H:%M")
+
+    content, sounds, presounds = timetable.getting.get_time(check_time)
+    idx = 0
+    for i in range(len(content)):
+        if content[i] == time_split:
+            idx = i
+            break
+    res = timetable.adding.add(check_time, sounds[idx], presounds[idx])
+    if not res:
+        return "✅ Смены разделены"
+    else:
+        return "❌ Неверное время"
 
 def resize(message, daemon: Daemon):
     args = message.text.split()[1:]

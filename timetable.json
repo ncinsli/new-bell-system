@@ -26,6 +26,16 @@
             45,
             10,
             45
+        ],
+        "exceptions": [
+            {
+                "time": "08:50",
+                "sound": "Винтовка",
+                "presound": "ОГЭ",
+                "enablePre": false,
+                "ringDuration": 5,
+                "preRingDuration": 7
+        }
         ]
     },
     "Tuesday": {
@@ -45,6 +55,16 @@
             45,
             10,
             45
+        ],
+	"exceptions": [
+            {
+                "time": "08:50",
+                "sound": "Винтовка",
+                "presound": "ОГЭ",
+                "enablePre": false,
+                "ringDuration": 5,
+                "preRingDuration": 7
+        }
         ]
     },
     "Wednesday": {
@@ -122,7 +142,7 @@
             45,
             5,
             45,
-            0,
+            "SEQ",
             45,
             5,
             45,

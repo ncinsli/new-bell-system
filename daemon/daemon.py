@@ -48,7 +48,7 @@ class Daemon(threading.Thread):
             self.display = Display(table)
             self.display.start()
 
-        except: print("[GPIO] .initial_output")
+        except: print("[Display] Can't initialize!")
 
     def update_ring_order(self):
         self.order = utils.nearest_forward_ring_index(self.today_timetable)

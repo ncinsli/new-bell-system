@@ -48,3 +48,28 @@ def set_time(items):
         cursor.execute(f"""
             INSERT INTO {table}(time, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) Values(?, ?, ?, ?, ?, ?, ?, ?)""", values)
         connection.commit()
+
+def append_exceptions(exceptions):
+    cursor = connection.cursor()
+
+    for e in exceptions:
+        values = [e["time"]]
+        for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"):
+            if day != e["day"]:
+                values.append(0)
+            else:
+                values.append(1)
+        
+        if "sound" in e:
+            values.append(e["sound"])
+        else:
+            values.append("Default")
+
+        if "presound" in e:
+            values.append(e["presound"])
+        else:
+            values.append("Defaultpre")
+
+        cursor.execute(f"""
+            INSERT INTO {table}(time, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, sound, presound) Values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values)
+        connection.commit()

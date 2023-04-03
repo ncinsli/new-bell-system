@@ -42,7 +42,7 @@ try:
 
         def run(self):
             while True:
-                time.sleep(configuration.display_delay_time)
+                time.sleep(configuration.display.delay)
                 try: 
                     if self.reinit == True:
                         try:
@@ -71,7 +71,7 @@ try:
             self.lcd.crlf()
             self.lcd.write_string(f'        {time.strftime("%Y", last_modified)}')
             self.lcd.crlf()
-            time.sleep(5-configuration.display_delay_time)
+            time.sleep(5-configuration.display.delay)
 
         def update_screen(self):
             nearest = self.calculate_nearest()
