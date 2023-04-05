@@ -321,16 +321,19 @@ def split(time_split):
 
     content, sounds, presounds = timetable.getting.get_time(check_time)
     idx = 0
+
     for i in range(len(content)):
         if content[i] == time_split:
             idx = i
             break
-    res = timetable.adding.add(check_time, sounds[idx], presounds[idx])
-    if not res:
-        return "✅ Смены разделены"
-    else:
-        return "❌ Неверное время"
-
+    
+    if content.count(time_split[0]) < 2:
+        res = timetable.adding.add(check_time, sounds[idx], presounds[idx])
+        
+        return "✅ Смены разделены" if not res else "❌ Неверное время"
+    
+    else: return "❌ Выбранное время уже разделено"
+    
 def resize(message, daemon: Daemon):
     args = message.text.split()[1:]
 
