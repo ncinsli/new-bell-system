@@ -311,13 +311,12 @@ def table_exceptions_handler(exceptions, pre_db, override_pre_db, day): # обр
         override_pre_db.append(e)
 
 def split(time_split):
-    # TODO: проверка правильная ли дата!!
     if len(time_split) > 1:
         check_time = " ".join(time_split)
     else:
-        check_time = " ".join([datetime.now().strftime("%d:%m:%Y"), time_split[0]])
+        check_time = " ".join([datetime.now().strftime("%d.%m.%Y"), time_split[0]])
 
-    check_time = datetime.strptime(check_time, "%d:%m:%Y %H:%M")
+    check_time = datetime.strptime(check_time, "%d.%m.%Y %H:%M")
 
     content, sounds, presounds = timetable.getting.get_time(check_time)
     idx = 0
@@ -334,24 +333,24 @@ def split(time_split):
     
     else: return "❌ Выбранное время уже разделено"
 
-def group(time_split):
+def group(timing):
     # TODO: проверка правильная ли дата!!
-    if len(time_split) > 1:
-        check_time = " ".join(time_split)
+    if len(timing) > 1:
+        check_time = " ".join(timing)
     else:
-        check_time = " ".join([datetime.now().strftime("%d:%m:%Y"), time_split[0]])
+        check_time = " ".join([datetime.now().strftime("%d.%m.%Y"), timing[0]])
 
-    check_time = datetime.strptime(check_time, "%d:%m:%Y %H:%M")
+    check_time = datetime.strptime(check_time, "%d.%m.%Y %H:%M")
 
     content, sounds, presounds = timetable.getting.get_time(check_time)
     idx = 0
 
     for i in range(len(content)):
-        if content[i] == time_split:
+        if content[i] == timing:
             idx = i
             break
 
-    if content.count(time_split[0]) >= 2:
+    if content.count(timing[0]) >= 2:
         res = timetable.removing.remove(check_time)
         res = timetable.adding.add(check_time, sounds[idx], presounds[idx])
 
