@@ -326,7 +326,7 @@ def split(time_split):
             idx = i
             break
     
-    if content.count(time_split[0]) < 2:
+    if content.count(time_split[0].zfill(5)) < 2:
         res = timetable.adding.add(check_time, sounds[idx], presounds[idx])
         
         return "✅ Смены разделены" if not res else "❌ Неверное время"
@@ -350,13 +350,14 @@ def group(timing):
             idx = i
             break
 
-    if content.count(timing[0]) >= 2:
+    if content.count(timing[0].zfill(5)) >= 2:
         res = timetable.removing.remove(check_time)
         res = timetable.adding.add(check_time, sounds[idx], presounds[idx])
 
         return "✅ Смены объединены" if not res else "❌ Неверное время"
     
-    else: return "❌ Выбранное время не было разделено, поэтому его нельзя объединить"
+    else: 
+        return "❌ Выбранное время не было разделено, поэтому его нельзя объединить"
     
     
 def resize(message, daemon: Daemon):

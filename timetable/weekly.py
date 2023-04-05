@@ -47,11 +47,12 @@ def set_weekly(table, sounds, presounds):
         prev = datetime.strptime(table[i - 1],"%H:%M")
         cur = datetime.strptime(table[i],"%H:%M")
 
-        shifts.append((cur - prev).seconds // 60)
+        shift = (cur - prev).seconds // 60
+        if shift == 0: shift = "SEQ"
+        shifts.append(shift)
 
     with open('timetable.json', 'r') as file:
         weekly_timetable = json.load(file)
-
     weekly_timetable[weekday_json]["firstBell"] = table[0]
     for i in range(0, len(weekly_timetable[weekday_json]["shifts"])):
         weekly_timetable[weekday_json]["shifts"][i] = shifts[i]
@@ -59,7 +60,7 @@ def set_weekly(table, sounds, presounds):
     for i in range(len(weekly_timetable[weekday_json]["shifts"]), len(shifts)):
         weekly_timetable[weekday_json]["shifts"].append(shifts[i])
 
-    with open('timetable.json', 'w') as file:
-        file.write(json.dumps(weekly_timetable, indent=4))
+    with open('timetable.json', 'wb') as file:
+        file.write(json.dumps(weekly_timetable, indent=4, ensure_ascii=False).encode('utf8'))
 
     return 0
