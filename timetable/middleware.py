@@ -356,7 +356,7 @@ def group(timing):
 
         return "✅ Смены объединены" if not res else "❌ Неверное время"
     
-    else: return "❌ Выбранное время не было разделено"
+    else: return "❌ Выбранное время не было разделено, поэтому его нельзя объединить"
     
     
 def resize(message, daemon: Daemon):
