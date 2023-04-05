@@ -580,6 +580,16 @@ def split(message):
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
+@bot.message_handler(commands=["group"])
+def group(message):
+    if (admins.validator.check(message)):
+        time = message.text.split()[1:]
+        res = timetable.middleware.group(time)
+        bot.send_message(message.from_user.id, res)
+    else:
+        bot.reply_to(message, replies.results.access_denied)
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
 
 print(f"[MAIN] Let's go!")
 daemon.start()

@@ -38,7 +38,8 @@ def remove(date_time: datetime):
             connection.commit()    
     
     cursor.execute(f"""
-            DELETE FROM {table_override} WHERE time="{time_str}" 
+            DELETE FROM {table_override} 
+            WHERE time="{time_str}" 
         """)
     connection.commit()
 

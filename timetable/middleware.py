@@ -333,6 +333,32 @@ def split(time_split):
         return "✅ Смены разделены" if not res else "❌ Неверное время"
     
     else: return "❌ Выбранное время уже разделено"
+
+def group(time_split):
+    # TODO: проверка правильная ли дата!!
+    if len(time_split) > 1:
+        check_time = " ".join(time_split)
+    else:
+        check_time = " ".join([datetime.now().strftime("%d:%m:%Y"), time_split[0]])
+
+    check_time = datetime.strptime(check_time, "%d:%m:%Y %H:%M")
+
+    content, sounds, presounds = timetable.getting.get_time(check_time)
+    idx = 0
+
+    for i in range(len(content)):
+        if content[i] == time_split:
+            idx = i
+            break
+
+    if content.count(time_split[0]) >= 2:
+        res = timetable.removing.remove(check_time)
+        res = timetable.adding.add(check_time, sounds[idx], presounds[idx])
+
+        return "✅ Смены объединены" if not res else "❌ Неверное время"
+    
+    else: return "❌ Выбранное время не было разделено"
+    
     
 def resize(message, daemon: Daemon):
     args = message.text.split()[1:]
