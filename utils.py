@@ -82,8 +82,8 @@ def get_state_reply(daemon: daemon.Daemon) -> str:
 
 ⚙️ Конфигурация
 Интервал предварительного звонка: за {configuration.rings.interval} мин до основного
-Длина звонка: {configuration.rings.main} с
-Длина предварительного звонка: {configuration.rings.preparatory} с
+Длина звонка: {(str(configuration.rings.main) + 'с') if not configuration.rings.auto else 'автоматически'}
+Длина предварительного звонка: {(str(configuration.rings.preparatory) + 'с') if not configuration.rings.auto else 'автоматически'}
 
 💾 Система
 Аптайм: {get_uptime()}

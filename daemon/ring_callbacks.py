@@ -32,7 +32,10 @@ def ring(sound: string, duration=configuration.rings.default):
 
     try:
         if sound != None: 
-            playback.play(sounds[sound][0:duration * 1000])
+            if configuration.rings.auto:
+                playback.play(sounds[sound])
+            else:
+                playback.play(sounds[sound][0:duration * 1000])
         else:
             time.sleep(duration)
         stop_ring()

@@ -591,6 +591,30 @@ def group(message):
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
+@bot.message_handler(commands=["set_pre_ring_length"])
+def set_pre_ring_duration(message):
+    if (admins.validator.check(message)):
+        length = int(message.text.split()[1])
+        if length <= 0: bot.send_message(message.from_user.id, '❌ Длина предварительного звонка не может быть меньше или равной нулю') 
+        else: 
+            configuration.rings.preparatory = length
+            configuration.rings.maximum = configuration.rings.maximum if configuration.rings.maximum > length else length
+            configuration.save()
+            bot.send_message(message.from_user.id, '✅ Длина предварительных звонков успешно изменена')
+    else:
+        bot.reply_to(message, replies.results.access_denied)
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
+@bot.message_handler(commands=["auto_length"])
+def auto_length(message):
+    if (admins.validator.check(message)):
+        configuration.rings.auto = not configuration.rings.auto
+        configuration.save()
+        bot.send_message(message.from_user.id, '✅ Теперь длины звонков равны длинам проигрываемых мелодий' if configuration.rings.auto else '✅ Теперь длины звонков задаются пользователем')
+    else:
+        bot.reply_to(message, replies.results.access_denied)
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
+
 
 print(f"[MAIN] Let's go!")
 daemon.start()

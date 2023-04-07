@@ -14,6 +14,7 @@ interval = 2
 is_first_preparatory_enabled = true
 are_all_preparatory_enabled = true
 default = 0
+auto = true
 
 [Privileges]
 owners = [ "newbell_admin",]

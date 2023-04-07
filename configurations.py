@@ -21,6 +21,7 @@ class RingTimingConfiguration:
     first_preparatory_enabled : bool = True
     preparatory_enabled : bool = True
     default : int = 0
+    auto : bool = False
 
 class DisplayConfiguration:
     delay : int = 3
@@ -61,6 +62,7 @@ class Configuration:
         self.rings.first_preparatory_enabled = parsed['Rings']['is_first_preparatory_enabled']
         self.rings.preparatory_enabled = parsed['Rings']['are_all_preparatory_enabled']
         self.rings.default = parsed['Rings']['default']
+        self.rings.auto = parsed['Rings']['auto']
 
         self.display.delay = parsed['Display']['delay']
         self.display.port = parsed['Display']['port']
@@ -87,6 +89,7 @@ class Configuration:
         parsed['Rings']['is_first_preparatory_enabled'] = self.rings.first_preparatory_enabled 
         parsed['Rings']['are_all_preparatory_enabled'] = self.rings.preparatory_enabled 
         parsed['Rings']['default'] = self.rings.default
+        parsed['Rings']['auto'] = self.rings.auto
 
         parsed['Display']['delay'] = self.display.delay
         parsed['Display']['port'] = self.display.port
