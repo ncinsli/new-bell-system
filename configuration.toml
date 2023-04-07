@@ -13,7 +13,7 @@ preparatory_length = 1
 interval = 2
 is_first_preparatory_enabled = true
 are_all_preparatory_enabled = true
-default = 0
+default = 3
 auto = true
 
 [Privileges]
