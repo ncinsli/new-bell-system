@@ -9,7 +9,7 @@
 ```
 git clone https://github.com/school146/school-bells-v2/
 pip install -r requirements.txt
-export BELLER_TOKEN=токен_своего_бота
+export BELLER_TOKEN=Токен_своего_бота
 screen -dmS bells python3 main.py
 ```
 Если вы захотите использовать систему у себя в школе, следует изменить конфигурации администраторов, длины звонков по умолчанию и прочего - используйте файл configuration.py
