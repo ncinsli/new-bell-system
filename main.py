@@ -14,6 +14,7 @@ from datetime import datetime
 from daemon.daemon import Daemon
 from datetime import datetime, timedelta
 from configurations import configuration
+from daemon import ring_callbacks
 import replies.format_tip, replies.results
 import utils
 
@@ -615,6 +616,14 @@ def auto_length(message):
         bot.reply_to(message, replies.results.access_denied)
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
+@bot.message_handler(commands=["stop"])
+def stop(message):
+    if (admins.validator.check(message)):
+        ring_callbacks.stop_ring()
+        bot.send_message(message.from_user.id, '✅ Звонок остановлен')
+    else:
+        bot.reply_to(message, replies.results.access_denied)
+        logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 print(f"[MAIN] Let's go!")
 daemon.start()
