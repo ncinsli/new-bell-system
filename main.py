@@ -627,6 +627,8 @@ def stop(message):
 
 print(f"[MAIN] Let's go!")
 daemon.start()
+print("[DAEMON] initialized")
+
 
 def thread_exception_handler(args):
     logging.exception(str(args.exc_type) + ' ' + str(args.exc_value) + ' ' + str(args.exc_traceback))
