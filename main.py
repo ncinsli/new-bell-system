@@ -454,9 +454,10 @@ def upload_sound_callback_file(message, file):
         float(message.text)
         bot.reply_to(message, "Недопустимое название аудиозаписи!")
     except:
+        promise_id = bot.send_message(message.from_user.id, '🕑 Аудиозапись обрабатывается').id
         res = timetable.middleware.upload_sound(bot, file, message.text)
+        bot.edit_message_text(res, message.chat.id, promise_id)
 
-        bot.reply_to(message, res)
         logging.info(f'@{message.from_user.username} uploaded sound file ' + message.text)
 
 @bot.message_handler(commands=["upload_sound"])
