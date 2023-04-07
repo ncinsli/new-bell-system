@@ -36,6 +36,8 @@ def set_weekly(table, sounds, presounds):
 
         connection.commit()
 
+    for time in table: # нужно разделение циклов для того, что бы следующая итерация цикла не удаляла запись прошлого(в случае с ипользованием /split, существует два одинаковых звонка)
+
         sound = sounds[table.index(time)]
         presound = presounds[table.index(time)]
 
