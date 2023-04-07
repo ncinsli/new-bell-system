@@ -789,8 +789,6 @@ def upload_sound(bot: TeleBot, message, name: str):
 def weekly(message):
     table, sounds, presounds = timetable.getting.get_time(datetime.now())
 
-    # print(sounds)
-    # print(presounds)
     err = timetable.weekly.set_weekly(table, sounds, presounds)
 
     return '✅ Постоянное расписание обновлено' if not err else '❌  Постоянное расписание не изменилось, потому что сегодняшний день ничем не отличается от постоянного расписания'

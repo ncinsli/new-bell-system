@@ -117,7 +117,7 @@ def admin_rm(message):
 
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/instant_ring' and call.message)
 def instant_ring_confirm(message):
-    duration = configuration.ring_duration
+    duration = configuration.rings.default
     sound = 'Default' # Если звук не предоставлен
     no_duration_state = False # для обработки логики аргументов
 #   print(message)
@@ -160,7 +160,7 @@ def ring(message):
         daemon.instant_ring(duration, sound)
 
         try:
-            duration = '' if duration == configuration.ring_duration else (" длиной в " + str(duration) + " секунд")
+            duration = '' if duration == configuration.rings.default else (" длиной в " + str(duration) + " секунд")
             melody = ("\nС мелодией: " + "<b>" + sound + "</b>") if sound != "Default" else ""
            
             for id in configuration.debug_info_receivers:
