@@ -17,6 +17,7 @@ from configurations import configuration
 from daemon import ring_callbacks
 import replies.format_tip, replies.results
 import utils
+import cli
 
 from singletones import connection
 import admins.edit
@@ -649,4 +650,7 @@ if database_exists == False:
 for owner in configuration.privileges.owners:
     admins.edit.append(owner)
 
+if configuration.cli_mode:
+    cli.command_listener.start()
+    
 bot.infinity_polling(timeout=60)

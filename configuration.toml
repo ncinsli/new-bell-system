@@ -13,8 +13,8 @@ preparatory_length = 1
 interval = 2
 is_first_preparatory_enabled = true
 are_all_preparatory_enabled = true
-default = 3
-auto = true
+default = 0
+auto = false
 
 [Privileges]
 owners = [ "newbell_admin",]
@@ -28,4 +28,5 @@ port = 3
 delay = 1
 
 [Misc]
-status = "Последний запуск: 31.03.2023 22:11"
+status = "Последний запуск: 14.04.2023 22:01"
+cli_mode = true

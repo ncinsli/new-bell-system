@@ -38,6 +38,7 @@ class Configuration:
 
     display : DisplayConfiguration = DisplayConfiguration()
     daemon : DaemonConfiguration = DaemonConfiguration()
+    cli_mode = True
     status = f'Последний запуск: {datetime.now().strftime("%d.%m.%Y %H:%M")}'
 
     def __init__(self, parsed: dict = {}):
@@ -69,6 +70,7 @@ class Configuration:
         self.daemon.delay = parsed['Daemon']['delay']
 
         self.status = parsed['Misc']['status']
+        self.cli_mode = parsed['Misc']['cli_mode']
 
     def to_dict(self) -> dict:
         parsed = {'Out' : dict(), 'Database' : dict(), 'Rings' : dict(), 'Privileges' : dict(), 'Display' : dict(), 'Daemon' : dict(), 'Misc' : dict()}
@@ -96,6 +98,7 @@ class Configuration:
         parsed['Daemon']['delay'] = self.daemon.delay
 
         parsed['Misc']['status'] = self.status
+        parsed['Misc']['cli_mode'] = self.cli_mode
 
         return parsed
 
