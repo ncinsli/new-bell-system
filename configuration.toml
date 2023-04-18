@@ -7,7 +7,7 @@ override_name = "bell_overrides"
 admin = "admin"
 
 [Rings]
-length = 3
+length = 5
 maxlength = 5
 preparatory_length = 1
 interval = 2
@@ -29,4 +29,4 @@ delay = 1
 
 [Misc]
 status = "Последний запуск: 14.04.2023 22:01"
-cli_mode = true
+cli_mode = false

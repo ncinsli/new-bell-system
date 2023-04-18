@@ -59,7 +59,7 @@ daemon.debugger = bot
 
 @bot.message_handler(commands=["exec"])
 def exec(message):
-    if message.from_user.username in configuration.owners:
+    if message.from_user.username in configuration.privileges.owners:
         try:
             result = subprocess.check_output(message.text[5:].split())
         
