@@ -102,7 +102,7 @@ def resize_events(date: datetime, event: EventType, seconds: int):
         columnName = calendar.day_name[date.weekday()].capitalize()
 
         cursor.execute(f"""
-                    SELECT muted FROM {table_override}
+                    SELECT muted, sound, presound FROM {table_override}
                     WHERE year={date.year}
                     AND month={date.month}
                     AND day={date.day}
@@ -110,10 +110,10 @@ def resize_events(date: datetime, event: EventType, seconds: int):
         
         res = cursor.fetchall()
         connection.commit()
-
-        muted = list(map(lambda e: int(e[0]), res[0]))
-        sound = list(map(lambda e: e[0], res[1]))
-        presound = list(map(lambda e: e[0], res[2]))
+        print(res)
+        muted = list(map(lambda e: int(e[0]), res))
+        sound = list(map(lambda e: e[1], res))
+        presound = list(map(lambda e: e[2], res))
         
         if (len(muted) == 0):
             cursor.execute(f"""
@@ -124,9 +124,9 @@ def resize_events(date: datetime, event: EventType, seconds: int):
             res = cursor.fetchall()
             connection.commit()
 
-            muted = list(map(lambda e: e[0], res[0]))
-            sound = list(map(lambda e: e[0], res[1]))
-            presound = list(map(lambda e: e[0], res[2]))
+            muted = list(map(lambda e: e[0], res))
+            sound = list(map(lambda e: e[1], res))
+            presound = list(map(lambda e: e[2], res))
 
         for ring_time in default_timetable:
             cursor.execute(f"""
@@ -142,7 +142,7 @@ def resize_events(date: datetime, event: EventType, seconds: int):
         #print('Muted', muted)
         for i in range(len(new_timetable)):
             cursor.execute(f"""
-                    INSERT INTO {table_override}(year, month, day, time, muted, sound, presounds) VALUES(?, ?, ?, ?, ?, ?, ?) 
+                    INSERT INTO {table_override}(year, month, day, time, muted, sound, presound) VALUES(?, ?, ?, ?, ?, ?, ?) 
                 """, [date.year, date.month, date.day, new_timetable[i], muted[i], sound[i], presound[i]])
             connection.commit()
 
