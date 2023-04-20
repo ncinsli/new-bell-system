@@ -79,9 +79,11 @@ class Configuration:
         self.cli_mode = parsed['Misc']['cli_mode']
 
         self.netdevice.host = parsed['NetDevice']['host']
+        self.netdevice.id = parsed['NetDevice']['id']
+        self.netdevice.name = parsed['NetDevice']['name']
 
     def to_dict(self) -> dict:
-        parsed = {'Out' : dict(), 'Database' : dict(), 'Rings' : dict(), 'Privileges' : dict(), 'Display' : dict(), 'Daemon' : dict(), 'Misc' : dict()}
+        parsed = {'Out' : dict(), 'Database' : dict(), 'Rings' : dict(), 'Privileges' : dict(), 'Display' : dict(), 'Daemon' : dict(), 'Misc' : dict(), "NetDevice" : dict()}
     
         parsed['Out']['port'] = self.daemon.port 
         parsed['Privileges']['owners'] = self.privileges.owners
@@ -107,6 +109,10 @@ class Configuration:
 
         parsed['Misc']['status'] = self.status
         parsed['Misc']['cli_mode'] = self.cli_mode
+
+        parsed['NetDevice']['host'] = self.netdevice.host
+        parsed['NetDevice']['id'] = self.netdevice.id
+        parsed['NetDevice']['name'] = self.netdevice.name
 
         return parsed
 
@@ -135,6 +141,10 @@ class Configuration:
         self.display.delay = instance.display.delay
         self.display.port = instance.display.port
         self.daemon.delay = instance.daemon.delay
+
+        self.netdevice.host = instance.netdevice.host
+        self.netdevice.id = instance.netdevice.id
+        self.netdevice.name = instance.netdevice.name
 
         self.status = instance.status
 

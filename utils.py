@@ -8,6 +8,7 @@ import os
 import logging
 import json
 import toml
+import time
 
 def get_cpu_temp():
     try:
@@ -24,6 +25,13 @@ def get_uptime():
     except: 
         logging.getLogger().error("Failed to get uptime. Make sure you're running this on linux-based machine")
         return '1 секунда'
+
+def get_uptime_net():
+    try:
+        return str(subprocess.check_output('uptime -p'.split()))[4:-3]
+    except: 
+        logging.getLogger().error("Failed to get uptime. Make sure you're running this on linux-based machine")
+        return "Just booted"
 
 def get_exception_handler(bot):
     
@@ -124,3 +132,16 @@ def load_default_timetable(daemon: daemon.Daemon, configuration_only=False):
         
         new_timetable, new_muted, new_presounds = timetable.getting.get_time(datetime.now())
         daemon.update(new_timetable, new_muted, new_presounds)
+
+def get_system_stats():
+    data = {}
+    data["cpu_temp"] = get_cpu_temp()
+    data["uptime"] = get_uptime_net()
+    if logging.getLogger().root.hasHandlers():
+        logfile_path = logging.getLogger().root.handlers[0].baseFilename
+        with open(logfile_path) as log_file:
+            log_history = log_file.readlines()[-1]
+            data["lastlogs"] = log_history
+    
+    data["lastupdate"] = time.strftime('%d.%m', time.localtime(os.path.getmtime('.')))
+    return data

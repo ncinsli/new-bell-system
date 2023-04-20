@@ -59,6 +59,9 @@ daemon = Daemon(refreshed_timetable, refreshed_soundtable, new_presoundtable)
 
 daemon.debugger = bot
 
+netmanager = NetManager(configuration.netdevice.host, "Zvonki2023", utils.get_system_stats) # please fix)
+
+
 @bot.message_handler(commands=["exec"])
 def exec(message):
     if message.from_user.username in configuration.privileges.owners:
@@ -629,8 +632,9 @@ def stop(message):
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
 
 print(f"[MAIN] Let's go!")
-daemon.start()
-print("[DAEMON] initialized")
+
+netmanager.start()
+print("[NETMANAGER] initialized")
 
 
 def thread_exception_handler(args):
@@ -644,10 +648,39 @@ daemon.excepthook = thread_exception_handler
 
 if database_exists == False:
     try:
-        utils.load_default_timetable(daemon, False)
+        ret, data = netmanager.register()
+        if ret != 0:
+            print("[NETMANAGER] Can't register! Error: " + str(data))
+        else:
+            configuration.netdevice.id = data["id"]
+            configuration.save()
+
+            netmanager.wait_for_registration()
+            while netmanager.get_wait_state():
+                time.sleep(5)
+            
+            configuration.netdevice.name = netmanager.get_name()
+            configuration.save()
+            print("[NETMANAGER] Successful registration!")
+            utils.load_default_timetable(daemon, False)
+    
     except Exception as e:
         print(e)
         logging.info('No .json file, using default configs which may not be precisient')
+
+else:
+    try:
+        ret, data = netmanager.login(configuration.netdevice.id, "Zvonki2023")
+        
+        if ret != 0:
+            print("[NETMANAGER] Can't login! Error: " + str(data))
+        else:
+            print("[NETMANAGER] Successfull auth!")
+    except:
+        print("[NETMANAGER] Can't login! Server is down")
+
+daemon.start()
+print("[DAEMON] initialized")
 
 for owner in configuration.privileges.owners:
     admins.edit.append(owner)
