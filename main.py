@@ -33,6 +33,8 @@ import timetable.setting
 import timetable.muting 
 import timetable.utils
 
+from communication.manager import NetManager
+
 if not os.path.exists('logs'):
     os.system("mkdir logs")
 

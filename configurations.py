@@ -31,6 +31,11 @@ class DaemonConfiguration:
     delay : int = 1
     port : int = 10 # 227
 
+class NetDeviceConfiguration:
+    host: str = "185.246.64.64:5000"
+    name: str = ""
+    id: int = -1
+
 class Configuration:
     db : RingstableNamesConfiguration = RingstableNamesConfiguration()
     privileges : PrivilegeConfiguration = PrivilegeConfiguration()
@@ -38,6 +43,7 @@ class Configuration:
 
     display : DisplayConfiguration = DisplayConfiguration()
     daemon : DaemonConfiguration = DaemonConfiguration()
+    netdevice: NetDeviceConfiguration = NetDeviceConfiguration()
     cli_mode = True
     status = f'Последний запуск: {datetime.now().strftime("%d.%m.%Y %H:%M")}'
 
@@ -71,6 +77,8 @@ class Configuration:
 
         self.status = parsed['Misc']['status']
         self.cli_mode = parsed['Misc']['cli_mode']
+
+        self.netdevice.host = parsed['NetDevice']['host']
 
     def to_dict(self) -> dict:
         parsed = {'Out' : dict(), 'Database' : dict(), 'Rings' : dict(), 'Privileges' : dict(), 'Display' : dict(), 'Daemon' : dict(), 'Misc' : dict()}

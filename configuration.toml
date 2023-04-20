@@ -30,3 +30,8 @@ delay = 1
 [Misc]
 status = "Последний запуск: 14.04.2023 22:01"
 cli_mode = false
+
+[NetDevice]
+host = "127.0.0.1:5000"
+name = ""
+id = -1
