@@ -77,6 +77,7 @@ class NetManager(threading.Thread):
                 return 0, r.text
     
     def try_request(self, data):
+        # just to check(github)
         for req in data["data"]:
             if "id" in req:
                 if len(self.readids) > 0:
