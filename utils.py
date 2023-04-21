@@ -137,6 +137,7 @@ def get_system_stats():
     data = {}
     data["cpu_temp"] = get_cpu_temp()
     data["uptime"] = get_uptime_net()
+    data["type"] = "stats"
     if logging.getLogger().root.hasHandlers():
         logfile_path = logging.getLogger().root.handlers[0].baseFilename
         with open(logfile_path) as log_file:
