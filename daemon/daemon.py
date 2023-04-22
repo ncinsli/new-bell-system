@@ -164,7 +164,7 @@ class Daemon(threading.Thread):
                     self.last_called_timing = timing
 
     def instant_ring(self, duration: float, sound = 0):
-        duration = duration if duration <= configuration.rings.maximum else configuration.maximum
+        duration = duration if duration <= configuration.rings.maximum else configuration.rings.maximum
 
         try:
             logging.warn(f'Started ring for {duration} seconds')

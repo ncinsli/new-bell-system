@@ -166,7 +166,7 @@ def ring(message):
         daemon.instant_ring(duration, sound)
 
         try:
-            duration = '' if duration == configuration.rings.default else (" длиной в " + str(duration) + " секунд")
+            duration = '' if duration == configuration.rings.main else (" длиной в " + str(duration) + " секунд")
             melody = ("\nС мелодией: " + "<b>" + sound + "</b>") if sound != "Default" else ""
            
             for id in configuration.debug_info_receivers:
