@@ -123,7 +123,7 @@ def admin_rm(message):
 
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == '/instant_ring' and call.message)
 def instant_ring_confirm(message):
-    duration = configuration.rings.default
+    duration = configuration.rings.main
     sound = 'Default' # Если звук не предоставлен
     no_duration_state = False # для обработки логики аргументов
 #   print(message)
