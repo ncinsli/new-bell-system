@@ -29,7 +29,7 @@ import timetable.muting
 import timetable.utils
 from admins import *
 from displaying import *
-
+import sys
 
 def socket():
     while True:
@@ -37,11 +37,10 @@ def socket():
             command = input('Admin@Newbell $ ')
             if command != '':
                 print(eval(command))
+
         except Exception as e: 
             print(e)
 
-def push(command):
-    eval(command)
 
 command_listener = threading.Thread(target=socket)
 command_listener.setDaemon(True)

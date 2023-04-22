@@ -26,7 +26,7 @@ def load_sound(sound_path: str):
         logger.critical("Failed to load sound on path " + sound_path)
         logger.exception(e)
 
-def ring(sound: string, duration=configuration.rings.default):
+def ring(sound: string, duration=configuration.rings.main):
     os.system(f'echo 1 > /sys/class/gpio/gpio{port}/value')
     time.sleep(0.1) # Для передачи системе оповещения тока, который скажет ей включить линейный вход, нужно время
 
