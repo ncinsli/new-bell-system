@@ -59,8 +59,7 @@ daemon = Daemon(refreshed_timetable, refreshed_soundtable, new_presoundtable)
 
 daemon.debugger = bot
 
-netmanager = NetManager(configuration.netdevice.host, "Zvonki2023", utils.get_system_stats) # please fix)
-
+#netmanager = NetManager(configuration.netdevice.host, "Zvonki2023", utils.get_system_stats) # please fix)
 
 @bot.message_handler(commands=["exec"])
 def exec(message):
@@ -175,7 +174,9 @@ def ring(message):
             if message.from_user.id not in configuration.debug_info_receivers:
                 daemon.debugger.send_message(message.from_user.id, f'🛎️  Подан ручной звонок{duration} {melody}', parse_mode='HTML')
 
-        except: logging.getLogger().error('Unable to notify debug info receivers about manual ring')
+        except Exception as e: 
+            logging.getLogger().error('Unable to notify debug info receivers about manual ring')
+            logging.getLogger().exception(e)
 
     else:
         logging.error(f'Operation {message.text} cancelled for user @{str(message.from_user.username).lower()}')
@@ -633,9 +634,9 @@ def stop(message):
 
 print(f"[MAIN] Let's go!")
 
-netmanager.start()
-print("[NETMANAGER] initialized")
-
+#netmanager.start()
+#print("[NETMANAGER] initialized")
+print("[NETMANAGER] IS REMOVED IN THIS BUILD")
 
 def thread_exception_handler(args):
     logging.exception(str(args.exc_type) + ' ' + str(args.exc_value) + ' ' + str(args.exc_traceback))
@@ -646,6 +647,7 @@ def thread_exception_handler(args):
 
 daemon.excepthook = thread_exception_handler
 
+'''
 if database_exists == False:
     try:
         ret, data = netmanager.register()
@@ -678,6 +680,7 @@ else:
             print("[NETMANAGER] Successfull auth!")
     except:
         print("[NETMANAGER] Can't login! Server is down")
+'''
 
 daemon.start()
 print("[DAEMON] initialized")

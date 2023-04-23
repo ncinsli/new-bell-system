@@ -3,6 +3,7 @@ try:
     import threading
     from datetime import datetime
     import os
+    import logging
     import time
     import timetable.utils as utils
     from configurations import configuration
@@ -54,7 +55,9 @@ try:
                             self.lcd.clear()
                         except: pass
                     self.update_screen()
-                except:
+
+                except Exception as e:
+                    logging.getLogger().exception(e)
                     self.reinit = True
                     self.lcd.close()
 
@@ -90,7 +93,7 @@ try:
                 else:
                     self.lcd.home()
             if self.need_update == True:
-                if nearest != 0:
+                if nearest > 0:
                     hours, minutes = map(int, self.table[nearest-1].split(':'))
                     difference = list(map(int, utils.sub_times(self.table[nearest], hours * 3600 + minutes * 60).split(":")))
                     thisPeriod = str(difference[0] * 60 + difference[1]) + " min"
@@ -139,6 +142,7 @@ try:
                         else:
                             self.lcd.write_string(f"Time left: {time_left[1]} mins")
                     self.lcd.crlf()
+
                     self.lcd.write_string(f"        {timestr}")
                 else:
                     self.lcd.crlf() 
@@ -148,11 +152,11 @@ try:
             self.need_update = False
 
         
-        def update(self, timetable: list, order: int, next_called_timing):
-            self.table = timetable
+        def update(self, table: list, order: int, next_called_timing):
+            self.table = table
             self.need_update = True
-        def next(self, timetable: list, order: int):
-            self.table = timetable
+        def next(self, table: list, order: int):
+            self.table = table
             self.need_update = True
         def no_more_rings(self):
             pass
@@ -167,5 +171,7 @@ try:
             self.displaying_time_end = datetime.timestamp(datetime.now()) + displaying_time
             self.need_update = True
 
-except:
+except Exception as e:
+    import logging
     print("You are not running the system on a Pi computer. All GPIO logic will be ignored")
+    print(logging.getLogger().exception(e))

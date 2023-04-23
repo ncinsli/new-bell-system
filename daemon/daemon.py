@@ -36,7 +36,7 @@ class Daemon(threading.Thread):
         self.update(table, muted, presounds)
         self.day = datetime.now().day
         
-        if (os.system(f'echo 1 > /sys/class/gpio{configuration.daemon.port}/value && echo 0 > /sys/class/gpio{configuration.daemon.port}/value') == 0):
+        if (os.system(f'echo 1 > /sys/class/gpio/gpio{configuration.daemon.port}/value && echo 0 > /sys/class/gpio/gpio{configuration.daemon.port}/value') == 0):
             self.gpio_mode = True
 
         logging.info(f'GPIO_MODE: {self.gpio_mode}')
