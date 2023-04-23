@@ -129,6 +129,20 @@ def instant_ring_confirm(message):
 #   bot.delete_message(message.chat.id, message.message_id)
     daemon.instant_ring(duration, sound)
 
+    try:
+        duration = '' if duration == configuration.rings.main else (" длиной в " + str(duration) + " секунд")
+        melody = ("\nС мелодией: " + "<b>" + sound + "</b>") if sound != "Default" else ""
+        
+        for id in configuration.privileges.receivers:
+            daemon.debugger.send_message(id, f'🛎️  Ручной звонок{duration} подан пользователем @{str(message.from_user.username).lower()} {melody}')
+        
+        if str(message.from_user.id) not in configuration.privileges.receivers:
+            daemon.debugger.send_message(message.from_user.id, f'🛎️  Подан ручной звонок{duration} {melody}', parse_mode='HTML')
+   
+    except Exception as e: 
+        logging.getLogger().error('Unable to notify debug info receivers about manual ring')
+        logging.getLogger().exception(e)
+
 @bot.message_handler(commands=["ring"])
 def ring(message):
     if admins.validator.check(message):
@@ -161,17 +175,18 @@ def ring(message):
         if sound not in sound_files and sound != 'Default':
             bot.reply_to(message, f"❌ Мелодия не прозвенит, потому что она не была загружена\nЗагрузите мелодию при помощи панели /sounds или команды <code>/upload_sound</code> ")
             return
-        
+     
+        duration = duration if duration <= configuration.rings.maximum else configuration.rings.maximum
         daemon.instant_ring(duration, sound)
 
         try:
             duration = '' if duration == configuration.rings.main else (" длиной в " + str(duration) + " секунд")
             melody = ("\nС мелодией: " + "<b>" + sound + "</b>") if sound != "Default" else ""
            
-            for id in configuration.debug_info_receivers:
+            for id in configuration.privileges.receivers:
                 daemon.debugger.send_message(id, f'🛎️  Ручной звонок{duration} подан пользователем @{str(message.from_user.username).lower()} {melody}')
             
-            if message.from_user.id not in configuration.debug_info_receivers:
+            if str(message.from_user.id) not in configuration.privileges.receivers:
                 daemon.debugger.send_message(message.from_user.id, f'🛎️  Подан ручной звонок{duration} {melody}', parse_mode='HTML')
 
         except Exception as e: 
@@ -371,7 +386,8 @@ def add_receiver(message):
         if ' ' not in message.text:
             bot.reply_to(message, replies.format_tip.add_receiver)
         else:
-            configuration.debug_info_receivers.add(message.text.split()[1])
+            configuration.privileges.receivers.add(message.text.split()[1])
+            configuration.save()
             bot.send_message(message.from_user.id, replies.results.addreceiver_ok)
             logging.info(f'@{str(message.from_user.username).lower()} added debug updated receiver ({message.text})')
     else:
@@ -642,7 +658,7 @@ def thread_exception_handler(args):
     logging.exception(str(args.exc_type) + ' ' + str(args.exc_value) + ' ' + str(args.exc_traceback))
     
     traceback_catched = traceback.format_exc()
-    for id in configuration.debug_info_receivers: 
+    for id in configuration.privileges.receivers: 
         daemon.debugger.send_message(id, '🔥 Критическая ошибка демон-процесса:\n\n' + f'{args.exc_type.__name__}\n\n{traceback_catched}')
 
 daemon.excepthook = thread_exception_handler

@@ -16,6 +16,7 @@ def init():
 
     for file in os.listdir('sounds'):
         path = os.path.abspath(f'sounds/{file}')
+        logging.getLogger().debug(f'Loading {path}')
         load_sound(path)
 
 def load_sound(sound_path: str):

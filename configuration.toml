@@ -8,7 +8,7 @@ admin = "admin"
 
 [Rings]
 length = 5
-maxlength = 5
+maxlength = 10
 preparatory_length = 1
 interval = 2
 is_first_preparatory_enabled = true

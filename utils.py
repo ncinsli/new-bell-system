@@ -38,7 +38,7 @@ def get_exception_handler(bot):
     def exception_handler(exc_type, exc_value, traceback):
         logging.exception(str(exc_type) + ' ' + str(exc_value) + ' ' + str(traceback))
 
-        for id in configuration.debug_info_receivers: 
+        for id in configuration.privileges.receivers: 
             bot.send_message(id, '🌪  Ошибка системы:\n' + str(exc_type) + ' ' + str(exc_value) + ' ' + str(traceback))
 
     return exception_handler    
