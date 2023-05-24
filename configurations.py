@@ -35,6 +35,7 @@ class NetDeviceConfiguration:
     host: str = "185.246.64.64:5000"
     name: str = ""
     id: int = -1
+    verified: bool = 0
 
 class Configuration:
     db : RingstableNamesConfiguration = RingstableNamesConfiguration()
@@ -81,6 +82,7 @@ class Configuration:
         self.netdevice.host = parsed['NetDevice']['host']
         self.netdevice.id = parsed['NetDevice']['id']
         self.netdevice.name = parsed['NetDevice']['name']
+        self.netdevice.verified = parsed['NetDevice']['verified']
 
     def to_dict(self) -> dict:
         parsed = {'Out' : dict(), 'Database' : dict(), 'Rings' : dict(), 'Privileges' : dict(), 'Display' : dict(), 'Daemon' : dict(), 'Misc' : dict(), "NetDevice" : dict()}
@@ -113,6 +115,7 @@ class Configuration:
         parsed['NetDevice']['host'] = self.netdevice.host
         parsed['NetDevice']['id'] = self.netdevice.id
         parsed['NetDevice']['name'] = self.netdevice.name
+        parsed['NetDevice']['verified'] = self.netdevice.verified
 
         return parsed
 
@@ -145,6 +148,7 @@ class Configuration:
         self.netdevice.host = instance.netdevice.host
         self.netdevice.id = instance.netdevice.id
         self.netdevice.name = instance.netdevice.name
+        self.netdevice.verififed = instance.netdevice.verified
 
         self.status = instance.status
 

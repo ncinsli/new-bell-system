@@ -21,35 +21,40 @@ class NetManager(threading.Thread):
     def run(self):
         data = None
         while True:
-            if self.work:
-                stats = self.get_system_stats()
-                try:
+            try:
+                if self.work:
+                    stats = self.get_system_stats()
                     r = requests.post(self.host + "/api/devices/refresh", headers={"Authorization": "Bearer " + self.token}, json = stats, timeout=30)
                     data = r.json()
 
                     if r.status_code == 200 and "data" in data:
                         self.try_request(r.json())
-                except:
-                    pass
+                    
+                if self.wait:
+                    r = requests.post(self.host + "/api/devices/wait_for_registration", json={"id": self.device_id}, timeout=20)
+                    if r.status_code == 200 and "token" in r.json():
+                        data = r.json()
+                        self.token = data["token"]
+                        self.name = data["name"]
+                        self.wait = False
+                        self.work = True
+            except Exception as e:
+                print(e)
                 
-            if self.wait:
-                r = requests.post(self.host + "/api/devices/wait_for_registration", json={"id": self.device_id}, timeout=120)
-                if r.status_code == 200 and "token" in r.json():
-                    data = r.json()
-                    self.token = data["token"]
-                    self.name = data["name"]
-                    self.wait = False
-                    self.work = True
 
-    def register(self):
-        r = requests.post(self.host + "/api/devices/register", json = {"password": self.password})
-        if r.status_code != 200:
-            return r.status_code, r.text
+    def register(self, id):
+        if id == -1:
+            r = requests.post(self.host + "/api/devices/register", json = {"password": self.password})
+            if r.status_code != 200:
+                return r.status_code, r.text
+            else:
+                data = r.json()
+                if "id" in data:
+                    self.device_id = int(data["id"])
+                    return 0, data
         else:
-            data = r.json()
-            if "id" in data:
-                self.device_id = int(data["id"])
-                return 0, data
+            self.device_id = id
+            return 0, {"id": id}
 
     def wait_for_registration(self):
         self.wait = True
@@ -75,7 +80,6 @@ class NetManager(threading.Thread):
     
     def try_request(self, data):
         print('[NETMANAGER] parsing request')
-        
         response = {"data": []}
 
         for req in data["data"]:

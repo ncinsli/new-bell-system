@@ -59,7 +59,7 @@ daemon = Daemon(refreshed_timetable, refreshed_soundtable, new_presoundtable)
 
 daemon.debugger = bot
 
-#netmanager = NetManager(configuration.netdevice.host, "Zvonki2023", utils.get_system_stats) # please fix)
+netmanager = NetManager(configuration.netdevice.host, "Zvonki2023", utils.get_system_stats) # please fix)
 
 @bot.message_handler(commands=["exec"])
 def exec(message):
@@ -650,9 +650,9 @@ def stop(message):
 
 print(f"[MAIN] Let's go!")
 
-#netmanager.start()
-#print("[NETMANAGER] initialized")
-print("[NETMANAGER] IS REMOVED IN THIS BUILD")
+netmanager.start()
+print("[NETMANAGER] initialized")
+#print("[NETMANAGER] IS REMOVED IN THIS BUILD")
 
 def thread_exception_handler(args):
     logging.exception(str(args.exc_type) + ' ' + str(args.exc_value) + ' ' + str(args.exc_traceback))
@@ -662,22 +662,24 @@ def thread_exception_handler(args):
         daemon.debugger.send_message(id, '🔥 Критическая ошибка демон-процесса:\n\n' + f'{args.exc_type.__name__}\n\n{traceback_catched}')
 
 daemon.excepthook = thread_exception_handler
-
-'''
-if database_exists == False:
+ 
+if configuration.netdevice.verified == 0: # not registered
     try:
-        ret, data = netmanager.register()
+        ret, data = netmanager.register(configuration.netdevice.id)
         if ret != 0:
             print("[NETMANAGER] Can't register! Error: " + str(data))
         else:
             configuration.netdevice.id = data["id"]
             configuration.save()
 
+            print("[NETMANAGER] Waiting for registration")
+
             netmanager.wait_for_registration()
             while netmanager.get_wait_state():
                 time.sleep(5)
             
             configuration.netdevice.name = netmanager.get_name()
+            configuration.netdevice.verified = True
             configuration.save()
             print("[NETMANAGER] Successful registration!")
             utils.load_default_timetable(daemon, False)
@@ -696,7 +698,6 @@ else:
             print("[NETMANAGER] Successfull auth!")
     except:
         print("[NETMANAGER] Can't login! Server is down")
-'''
 
 daemon.start()
 print("[DAEMON] initialized")
