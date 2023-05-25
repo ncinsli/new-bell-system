@@ -31,7 +31,7 @@ class NetManager(threading.Thread):
                         self.try_request(r.json())
                     
                 if self.wait:
-                    r = requests.post(self.host + "/api/devices/wait_for_registration", json={"id": self.device_id}, timeout=20)
+                    r = requests.post(self.host + "/api/devices/wait_for_registration", json={"id": self.device_id}, timeout=120)
                     if r.status_code == 200 and "token" in r.json():
                         data = r.json()
                         self.token = data["token"]
