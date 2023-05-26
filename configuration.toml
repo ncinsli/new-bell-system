@@ -33,6 +33,6 @@ cli_mode = false
 
 [NetDevice]
 host = "http://127.0.0.1:5000"
-id = 4
-name = ""
-verified = false
+id = 1
+name = "s147"
+verified = true
