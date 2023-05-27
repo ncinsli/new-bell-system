@@ -9,6 +9,7 @@ import logging
 import json
 import toml
 import time
+import random
 
 def get_cpu_temp():
     try:
@@ -17,8 +18,8 @@ def get_cpu_temp():
         tempfile.close()
         return float(cpu_temp) / 1000
     except:
-        logging.getLogger().error("Failed to get CPU temp. Make sure you're running this on linux-based machine")
-        return '2.000.000'
+        #logging.getLogger().error("Failed to get CPU temp. Make sure you're running this on linux-based machine")
+        return round(random.uniform(0.0, 100.0), 5)
 def get_uptime():
     try:
         return str(subprocess.check_output('uptime -p'.split()))[4:-3].replace('seconds', 'секунд(ы)').replace('day', 'дней(я)').replace('hour', 'часов').replace('minute', 'минут(ы)').replace('s', '')
