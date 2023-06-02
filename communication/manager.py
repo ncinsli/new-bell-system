@@ -6,6 +6,8 @@ import hashlib
 import time
 import os, subprocess
 
+import socketio
+
 class NetManager(threading.Thread):
     def __init__(self, host, password, func, device_id = None, token = None):
         super().__init__()
@@ -23,12 +25,7 @@ class NetManager(threading.Thread):
         while True:
             try:
                 if self.work:
-                    stats = self.get_system_stats()
-                    r = requests.post(self.host + "/api/devices/refresh", headers={"Authorization": "Bearer " + self.token}, json = stats, timeout=30)
-                    data = r.json()
-
-                    if r.status_code == 200 and "data" in data:
-                        self.try_request(r.json())
+                    break
                     
                 if self.wait:
                     r = requests.post(self.host + "/api/devices/wait_for_registration", json={"id": self.device_id}, timeout=120)
@@ -40,7 +37,29 @@ class NetManager(threading.Thread):
                         self.work = True
             except Exception as e:
                 print(e)
-                
+        
+        if self.work:
+            sio = socketio.Client()
+
+            @sio.event(namespace="/refreshing")
+            def request():
+                pass
+
+            def disconnection_task(exit_st):
+                while not exit_st[0]:
+                    pass
+                sio.disconnect()
+
+            def refreshing_task():
+                while self.work:
+                    stats = self.get_system_stats()
+                    stats["id"] = self.device_id
+                    sio.emit("refresh", stats, namespace="/refreshing")
+                    time.sleep(5)
+
+            sio.connect(self.host, headers={"Authorization": "Bearer " + self.token}, namespaces=["/refreshing"])
+            refreshing_task_thread = sio.start_background_task(refreshing_task)
+            sio.wait()
 
     def register(self, id):
         if id == -1:

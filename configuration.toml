@@ -32,7 +32,7 @@ status = "Последний запуск: 14.04.2023 22:01"
 cli_mode = false
 
 [NetDevice]
-host = "http://127.0.0.1:5000"
+host = "http://185.246.64.64:5000"
 id = 1
-name = "s147"
+name = "s147_test"
 verified = true
