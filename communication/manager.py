@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 import threading
 import hashlib
 import time
-import os, subprocess, signal
-
+import os, subprocess, signal, psutil
 import socketio
 
 class NetManager(threading.Thread):
@@ -153,7 +152,16 @@ class NetManager(threading.Thread):
             if os.name == 'nt':
                 subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=self.processes[execution_id].pid))
             else:
-                os.system("kill " + self.processes[execution_id].pid)
+                kill_child_processes(self.processes[execution_id].pid)
         except:
             try: print(f"[NETMANAGER] couldn't kill process. execution_id: {execution_id}. pid: {self.processes[execution_id].pid}")
             except: print("[NETMANAGER] something went wrong while killing process")
+
+def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+    try:
+      parent = psutil.Process(parent_pid)
+    except psutil.NoSuchProcess:
+      return
+    children = parent.children(recursive=True)
+    for process in children:
+      process.send_signal(sig)
