@@ -31,7 +31,7 @@ def get_uptime_net():
     try:
         return str(subprocess.check_output('uptime -p'.split()))[4:-3]
     except: 
-        logging.getLogger().error("Failed to get uptime. Make sure you're running this on linux-based machine")
+        #logging.getLogger().error("Failed to get uptime. Make sure you're running this on linux-based machine")
         return "Just booted"
 
 def get_exception_handler(bot):

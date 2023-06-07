@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import threading
 import hashlib
 import time
-import os, subprocess
+import os, subprocess, signal
 
 import socketio
 
@@ -19,6 +19,9 @@ class NetManager(threading.Thread):
         self.work = False
         self.wait = False
         self.readids = []
+        self.daemon = True # threading
+
+        self.processes =  {}
     
     def run(self):
         data = None
@@ -42,8 +45,18 @@ class NetManager(threading.Thread):
             sio = socketio.Client()
 
             @sio.event(namespace="/refreshing")
-            def request():
-                pass
+            def interrupt(data):
+                if self.device_id in data["ids"]:
+                    if data["execution_id"] in self.processes.keys():
+                        self.kill_process(data["execution_id"])
+
+            @sio.event(namespace="/refreshing")
+            def request(data):
+                threading.Thread(target=self.try_request, args=(data, sio, )).start()
+
+            @sio.event(namespace="/refreshing")
+            def connect():
+                print("[NETMANAGER] connecting established")
 
             def disconnection_task(exit_st):
                 while not exit_st[0]:
@@ -97,53 +110,50 @@ class NetManager(threading.Thread):
                 self.work = True
                 return 0, r.text
     
-    def try_request(self, data):
+    def try_request(self, data, sio):
         print('[NETMANAGER] parsing request')
-        response = {"data": []}
 
-        for req in data["data"]:
-            if "id" in req:
-                if len(self.readids) > 0:
-                    if req["id"] in self.readids:
-                        continue
-                else:
-                    self.readids = [req["id"]]
+        if data["ids"] != "all":
+            if self.device_id not in data["ids"]:
+                return
+
+        if data["type"] == "execute":
+            if data["content"]["failsafe_mode"]:
+                threading.Thread(target=self.killer, args=(data["content"]["failsafe_timeout"], data["content"]["execution_id"])).start()
+            self.processes[data["content"]["execution_id"]] = subprocess.Popen(data["content"]["cmd"], stdout=subprocess.PIPE, shell=True)
+            out, err = self.processes[data["content"]["execution_id"]].communicate()
+            if out != None: 
+                out = out.decode("utf-8")
+            if err != None:
+                err = err.decode("utf-8")
+
+            sio.emit("response", {"response": out, "device_id": self.device_id, "execution_id": data["content"]["execution_id"], "errors": err}, namespace="/refreshing")
+            try: del self.processes[data["content"]["execution_id"]]
+            except: pass
+        elif data["type"] == "interrupt":
+            if data["execution_id"] == "all":
+                for p in self.processes.keys():
+                    self.kill_process(p)
+                self.processes = {}
             else:
-                continue
-            
-            self.readids.append(req["id"])
-            
-            if "content" not in req:
-                continue
-            
-            if "type" not in req["content"]:
-                continue
- 
-            content = req["content"]
-
-            req_response = "done"
-
-            if content["type"] == "UPDATE":
-                os.system("python3 /root/update.py")
-                response["data"].append({"id": req["id"], "response": "UPDATING"})
-                return self.response(response)
-            
-            if content["type"] == "EXECUTE":
-                if "prompt" in content:
-                    try:
-                        req_response = subprocess.check_output(content["prompt"].split())
-                    except:
-                        req_response = "Execution error"
-
-            if content["type"] == "LOCK":
-                print("TODO: think about what is softlock for us")
-            if content["type"] == "UNLOCK":
-                print("TODO: think about what is softlock for us")
-            
-            response["data"].append({"id": req["id"], "response": str(req_response), "type": "response"})
-
-        return self.response(response)
+                self.kill_process(data["execution_id"])
+                try: del self.processes[data["execution_id"]]
+                except: pass
 
     def response(self, data):
         r = requests.post(self.host + "/api/devices/response", headers={"Authorization": "Bearer " + self.token}, json = data)
         return r.status_code, r.text
+
+    def killer(self, timeout, execution_id):
+        time.sleep(timeout)
+        self.kill_process(execution_id)
+
+    def kill_process(self, execution_id):
+        try:
+            if os.name == 'nt':
+                subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=self.processes[execution_id].pid))
+            else:
+                os.kill(self.processes[execution_id].pid, signal.SIGTERM)
+        except:
+            try: print(f"[NETMANAGER] couldn't kill process. execution_id: {execution_id}. pid: {self.processes[execution_id].pid}")
+            except: print("[NETMANAGER] something went wrong while killing process")

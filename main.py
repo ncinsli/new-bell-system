@@ -45,8 +45,8 @@ log_filename = os.path.join('logs', f'{datetime.now().strftime("%a %d %b %Y %H;%
 
 logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler(log_filename, mode='a'), logging.StreamHandler(sys.stdout)], format='[%(asctime)s] [%(levelname)s] %(message)s')
 
-#token = os.environ["TOKEN"]
-token = "5985971016:AAG6iXLG0aDrnsx4JUmy6TKZMFBa2xVJoeo"
+token = os.environ["TOKEN"]
+#token = "5985971016:AAG6iXLG0aDrnsx4JUmy6TKZMFBa2xVJoeo"
 bot = TeleBot(token)
 bot.parse_mode = 'html'
 
