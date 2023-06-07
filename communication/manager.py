@@ -69,7 +69,7 @@ class NetManager(threading.Thread):
                     sio.emit("refresh", stats, namespace="/refreshing")
                     time.sleep(5)
 
-            sio.connect(self.host, headers={"Authorization": "Bearer " + self.token}, namespaces=["/refreshing"])
+            sio.connect(self.host, headers={"Authorization": "Bearer " + self.token}, namespaces=["/refreshing"], wait_timeout = 10)
             refreshing_task_thread = sio.start_background_task(refreshing_task)
             sio.wait()
 
