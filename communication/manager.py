@@ -153,7 +153,7 @@ class NetManager(threading.Thread):
             if os.name == 'nt':
                 subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=self.processes[execution_id].pid))
             else:
-                os.kill(self.processes[execution_id].pid, signal.SIGTERM)
+                os.system("kill " + self.processes[execution_id].pid)
         except:
             try: print(f"[NETMANAGER] couldn't kill process. execution_id: {execution_id}. pid: {self.processes[execution_id].pid}")
             except: print("[NETMANAGER] something went wrong while killing process")
