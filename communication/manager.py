@@ -56,6 +56,13 @@ class NetManager(threading.Thread):
             @sio.event(namespace="/refreshing")
             def connect():
                 print("[NETMANAGER] connecting established")
+                self.work = True
+
+            @sio.event(namespace="/refreshing")
+            def disconnect():
+                print("[NETMANAGER] disonnected")
+                self.work = False
+                reconnect_task_thread = sio.start_background_task(reconnection_task)
 
             def disconnection_task(exit_st):
                 while not exit_st[0]:
@@ -66,12 +73,35 @@ class NetManager(threading.Thread):
                 while self.work:
                     stats = self.get_system_stats()
                     stats["id"] = self.device_id
-                    sio.emit("refresh", stats, namespace="/refreshing")
+                    try:
+                        sio.emit("refresh", stats, namespace="/refreshing")
+                    except:
+                        if not self.work:
+                            break
                     time.sleep(5)
 
-            sio.connect(self.host, headers={"Authorization": "Bearer " + self.token}, namespaces=["/refreshing"], wait_timeout = 10)
-            refreshing_task_thread = sio.start_background_task(refreshing_task)
-            sio.wait()
+            def reconnection_task():
+                while not self.work:
+                    try:
+                        print("[NETMANAGER] reconnecting")
+                        sio.connect(self.host, headers={"Authorization": "Bearer " + self.token}, namespaces=["/refreshing"], wait_timeout = 10)
+                        self.work = True
+                        refreshing_task_thread = sio.start_background_task(refreshing_task)
+                        sio.wait()
+                        break
+                    except:
+                        pass
+                    time.sleep(5)
+            
+            while self.work:
+                    try:
+                        sio.connect(self.host, headers={"Authorization": "Bearer " + self.token}, namespaces=["/refreshing"], wait_timeout = 10)
+                        refreshing_task_thread = sio.start_background_task(refreshing_task)
+                        sio.wait()
+                        break
+                    except:
+                        pass            
+            
 
     def register(self, id):
         if id == -1:
@@ -96,6 +126,19 @@ class NetManager(threading.Thread):
     def get_name(self):
         return self.name
 
+    def retry_login(self, id, password):
+        while True:
+            time.sleep(5)
+            print("[NETMANAGER] trying to auth")
+            try:
+                ret, text = self.login(id, password)
+                if ret == 0:
+                    print("[NETMANAGER] Successfull auth!")
+                    break
+            except:
+                pass
+        return
+
     def login(self, id, password):
         self.device_id = id
         self.password = password
@@ -106,7 +149,7 @@ class NetManager(threading.Thread):
             data = r.json()
             if "token" in data:
                 self.token = data["token"]
-                self.work = True
+                self.work = True 
                 return 0, r.text
     
     def try_request(self, data, sio):

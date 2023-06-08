@@ -699,6 +699,7 @@ else:
             print("[NETMANAGER] Successfull auth!")
     except:
         print("[NETMANAGER] Can't login! Server is down")
+        threading.Thread(target=netmanager.retry_login, args=(configuration.netdevice.id, "Zvonki2023", ), daemon=True).start()
 
 daemon.start()
 print("[DAEMON] initialized")
