@@ -72,7 +72,7 @@ class NetManager(threading.Thread):
             def refreshing_task():
                 while self.work:
                     stats = self.get_system_stats()
-                    stats["id"] = self.device_id
+                    stats["token"] = self.token
                     try:
                         sio.emit("refresh", stats, namespace="/refreshing")
                     except:
@@ -154,6 +154,7 @@ class NetManager(threading.Thread):
     
     def try_request(self, data, sio):
         print('[NETMANAGER] parsing request')
+        print(data)
 
         if data["ids"] != "all":
             if self.device_id not in data["ids"]:
@@ -166,10 +167,14 @@ class NetManager(threading.Thread):
             out, err = self.processes[data["content"]["execution_id"]].communicate()
             if out != None: 
                 out = out.decode("utf-8")
+            else:
+                out = ""
             if err != None:
                 err = err.decode("utf-8")
+            else:
+                err = ""
 
-            sio.emit("response", {"response": out, "device_id": self.device_id, "execution_id": data["content"]["execution_id"], "errors": err}, namespace="/refreshing")
+            sio.emit("device_response", {"type": "device_response", "response": out, "execution_id": data["content"]["execution_id"], "errors": err, "token": self.token}, namespace="/refreshing")
             try: del self.processes[data["content"]["execution_id"]]
             except: pass
         elif data["type"] == "interrupt":
@@ -178,6 +183,10 @@ class NetManager(threading.Thread):
                     self.kill_process(p)
                 self.processes = {}
             else:
+                if data["execution_id"] not in self.processes.keys():
+                    sio.emit("device_response", {"type": "device_response", "response": "", "execution_id": data["execution_id"], "errors": "Process not started", "token": self.token}, namespace="/refreshing")
+                    return
+                
                 self.kill_process(data["execution_id"])
                 try: del self.processes[data["execution_id"]]
                 except: pass
